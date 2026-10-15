@@ -25,7 +25,7 @@ Som's Garden เป็นมาสคอตหน้าจอง่าย ๆ �
 ## 🚀 เริ่มใช้ใน 3 คำสั่ง
 
 ```bash
-git clone https://github.com/<คุณ>/soms-garden.git && cd soms-garden
+git clone https://github.com/film083oxf-dotcom/soms-garden.git && cd soms-garden
 npx serve .                                    # เปิด http://localhost:3000
 node set-status.js coding "กำลังเขียนของดี"      # สั่งน้องส้มทำงาน
 ```
@@ -172,7 +172,7 @@ depending on what your agent reports.
 ## 🚀 Start in 3 commands
 
 ```bash
-git clone https://github.com/<you>/soms-garden.git && cd soms-garden
+git clone https://github.com/film083oxf-dotcom/soms-garden.git && cd soms-garden
 npx serve .                                     # open http://localhost:3000
 node set-status.js coding "working on the login page"
 ```
