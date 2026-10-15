@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="220" height="200">
+  <title>น้องส้ม — งานเสร็จ นอนหงายท้อง</title>
+  <!-- ท่า: ยืดเส้นยืดสาย แล้วนอนหงายท้องบนสนามหญ้า -->
+  <style>
+    .breathe { animation: breathe 3.6s ease-in-out infinite; }
+    @keyframes breathe { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+    .note { animation: note 2.4s ease-in-out infinite; opacity: 0; }
+    .note2 { animation-delay: 1.2s }
+    @keyframes note {
+      0%   { transform: translateY(4px);  opacity: 0 }
+      25%  { opacity: 1 }
+      100% { transform: translateY(-16px); opacity: 0 }
+    }
+  </style>
+
+  <!-- เงา -->
+  <ellipse cx="112" cy="190" rx="82" ry="9" fill="#000" opacity=".08"/>
+
+  <g class="breathe">
+    <!-- หางวางผ่อนคลาย -->
+    <path d="M192 150 C214 150 218 168 206 180" fill="none" stroke="#FFA94D" stroke-width="15" stroke-linecap="round"/>
+    <path d="M211 166 C213 172 211 176 207 179" fill="none" stroke="#F08A3C" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- ตัวหงายท้อง -->
+    <ellipse cx="132" cy="158" rx="64" ry="31" fill="#FFA94D"/>
+    <ellipse cx="132" cy="152" rx="50" ry="22" fill="#FFE9CF"/>
+    <path d="M186 140 q-11 6 -11 17" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M160 136 q-11 6 -11 17" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+    <!-- 4 เท้าชี้ฟ้า -->
+    <ellipse cx="100" cy="126" rx="13" ry="15" fill="#FFE9CF" transform="rotate(-16 100 126)"/>
+    <ellipse cx="132" cy="122" rx="13" ry="15" fill="#FFE9CF" transform="rotate(8 132 122)"/>
+    <ellipse cx="160" cy="126" rx="13" ry="15" fill="#FFE9CF" transform="rotate(20 160 126)"/>
+    <ellipse cx="180" cy="140" rx="12" ry="14" fill="#FFE9CF" transform="rotate(34 180 140)"/>
+
+    <!-- หู -->
+    <path d="M20 124 L14 94 L46 108 Z" fill="#FFA94D"/>
+    <path d="M27 121 L24 104 L40 112 Z" fill="#FFC9C9"/>
+    <path d="M74 120 L84 92 L52 102 Z" fill="#FFA94D"/>
+    <path d="M68 117 L76 100 L58 106 Z" fill="#FFC9C9"/>
+
+    <!-- หัว -->
+    <circle cx="48" cy="152" r="42" fill="#FFA94D"/>
+    <circle cx="26" cy="162" r="16" fill="#FFA94D"/>
+    <circle cx="70" cy="162" r="16" fill="#FFA94D"/>
+    <path d="M42 114 V124 M50 113 V123" stroke="#F08A3C" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- ตายิ้มปิด -->
+    <path d="M24 152 q10 -12 20 0" stroke="#3B2B26" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M54 152 q10 -12 20 0" stroke="#3B2B26" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+    <!-- ปากอิ่มเอม -->
+    <ellipse cx="47" cy="168" rx="19" ry="12" fill="#FFE9CF"/>
+    <path d="M42 160 h11 l-5.5 5.5 z" fill="#EF6E6E" stroke="#EF6E6E" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M47 166 q-5 8 -11 2 M47 166 q5 8 11 2" stroke="#D2813F" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="20" cy="162" rx="10" ry="6.5" fill="#FF8FA8" opacity=".65"/>
+    <ellipse cx="74" cy="162" rx="10" ry="6.5" fill="#FF8FA8" opacity=".65"/>
+
+    <!-- หนวด -->
+    <path d="M24 168 L4 171 M24 174 L6 182" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M70 168 L90 171 M70 174 L88 182" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- โน้ตเพลงลอย -->
+  <g class="note" transform="translate(150 84) scale(.9)">
+    <path d="M0 0 v-16 l12 -4 v16" stroke="#B49BD8" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="-2" cy="0" rx="5" ry="4" fill="#B49BD8" transform="rotate(-20 -2 0)"/>
+    <ellipse cx="10" cy="-4" rx="5" ry="4" fill="#B49BD8" transform="rotate(-20 10 -4)"/>
+  </g>
+  <g class="note note2" transform="translate(176 62) scale(.7)">
+    <path d="M0 0 v-16 l12 -4 v16" stroke="#F0A3C4" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="-2" cy="0" rx="5" ry="4" fill="#F0A3C4" transform="rotate(-20 -2 0)"/>
+    <ellipse cx="10" cy="-4" rx="5" ry="4" fill="#F0A3C4" transform="rotate(-20 10 -4)"/>
+  </g>
+</svg>

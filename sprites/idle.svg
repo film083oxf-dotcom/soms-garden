@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="220" height="200">
+  <title>น้องส้ม — หลับ (Zzz)</title>
+  <!-- ท่า: ขดตัวหลับ มี Zzz ลอย -->
+  <style>
+    .breathe { animation: breathe 4s ease-in-out infinite; }
+    @keyframes breathe { 0%,100% { transform: translateY(0) scaleY(1) } 50% { transform: translateY(-1.5px) scaleY(1.02) } }
+    .z { animation: zzz 2.6s ease-in-out infinite; opacity: 0; }
+    .z2 { animation-delay: .8s } .z3 { animation-delay: 1.6s }
+    @keyframes zzz {
+      0%   { transform: translateY(6px);  opacity: 0 }
+      25%  { opacity: 1 }
+      100% { transform: translateY(-14px); opacity: 0 }
+    }
+  </style>
+
+  <!-- เงา -->
+  <ellipse cx="112" cy="188" rx="82" ry="9" fill="#000" opacity=".08"/>
+
+  <g class="breathe">
+    <!-- หางพันรอบตัว -->
+    <path d="M172 172 C196 176 202 158 186 150" fill="none" stroke="#F08A3C" stroke-width="15" stroke-linecap="round"/>
+
+    <!-- ตัวขดกลม -->
+    <ellipse cx="118" cy="152" rx="74" ry="40" fill="#FFA94D"/>
+    <!-- พุงแนบพื้น -->
+    <ellipse cx="122" cy="172" rx="46" ry="16" fill="#FFE9CF"/>
+    <path d="M186 140 q-13 7 -13 20" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M158 124 q-13 7 -13 20" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <!-- เท้าหน้าเก็บใต้คาง -->
+    <ellipse cx="52" cy="184" rx="20" ry="10" fill="#FFE9CF"/>
+    <ellipse cx="82" cy="186" rx="18" ry="9" fill="#FFE9CF"/>
+
+    <!-- หู -->
+    <path d="M30 126 L22 94 L56 112 Z" fill="#FFA94D"/>
+    <path d="M37 123 L33 104 L50 115 Z" fill="#FFC9C9"/>
+    <path d="M84 118 L98 92 L62 102 Z" fill="#FFA94D"/>
+    <path d="M77 116 L87 100 L66 107 Z" fill="#FFC9C9"/>
+
+    <!-- หัวพิงพื้น -->
+    <circle cx="60" cy="152" r="42" fill="#FFA94D"/>
+    <circle cx="36" cy="162" r="16" fill="#FFA94D"/>
+    <circle cx="84" cy="162" r="16" fill="#FFA94D"/>
+    <path d="M54 114 V124 M62 113 V123" stroke="#F08A3C" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- ตาหลับ (^ นอน) -->
+    <path d="M34 152 q10 11 20 0" stroke="#3B2B26" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M64 152 q10 11 20 0" stroke="#3B2B26" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+    <!-- ปากจิ๋วหลับ -->
+    <ellipse cx="59" cy="168" rx="19" ry="12" fill="#FFE9CF"/>
+    <path d="M54 160 h11 l-5.5 5.5 z" fill="#EF6E6E" stroke="#EF6E6E" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M54 170 q5 5 10 0" stroke="#D2813F" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="32" cy="163" rx="10" ry="6.5" fill="#FF9BB0" opacity=".55"/>
+    <ellipse cx="86" cy="163" rx="10" ry="6.5" fill="#FF9BB0" opacity=".55"/>
+
+    <!-- หนวด -->
+    <path d="M34 168 L14 171 M34 174 L16 181" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M84 168 L104 171 M84 174 L102 181" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Zzz ลอย -->
+  <g transform="translate(150 108) scale(.7)">
+    <g class="z"><path d="M0 0 h16 l-16 18 h16" stroke="#8C7BB8" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+  <g transform="translate(168 80) scale(.95)">
+    <g class="z z2"><path d="M0 0 h16 l-16 18 h16" stroke="#8C7BB8" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+  <g transform="translate(188 46) scale(1.2)">
+    <g class="z z3"><path d="M0 0 h16 l-16 18 h16" stroke="#8C7BB8" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+</svg>

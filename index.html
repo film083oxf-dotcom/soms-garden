@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="th" data-theme="pastel">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Som's Garden · น้องส้มทำสวน</title>
+<style>
+  /* =========================================================
+     ธีม — เลือกได้ 3 แบบ (จำค่าไว้ใน localStorage)
+     ========================================================= */
+  html[data-theme="pastel"] {
+    --bg: linear-gradient(180deg, #FFF4E4 0%, #FFE9EF 55%, #E8F6E4 100%);
+    --ink: #5B4636;
+    --panel: rgba(255, 255, 255, .78);
+    --panel-line: rgba(90, 60, 30, .10);
+    --grass: #CFE9B0;
+    --grass-line: rgba(255, 255, 255, .18);
+    --bubble: #FFFFFF;
+    --soft: #8A7460;
+  }
+  html[data-theme="transparent"] {
+    --bg: transparent;
+    --ink: #5B4636;
+    --panel: rgba(255, 255, 255, .82);
+    --panel-line: rgba(90, 60, 30, .12);
+    --grass: rgba(200, 232, 168, .92);
+    --grass-line: rgba(255, 255, 255, .22);
+    --bubble: #FFFFFF;
+    --soft: #8A7460;
+  }
+  html[data-theme="night"] {
+    --bg: linear-gradient(180deg, #2B2545 0%, #1F2440 100%);
+    --ink: #F1E8DC;
+    --panel: rgba(45, 40, 70, .78);
+    --panel-line: rgba(255, 255, 255, .12);
+    --grass: #4C6B50;
+    --grass-line: rgba(255, 255, 255, .07);
+    --bubble: #FFF6E8;
+    --soft: #C7BCD8;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Noto Sans Thai", "Leelawadee UI", "Th Sarabun New", "Sarabun",
+                 system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    transition: background .3s ease;
+  }
+
+  /* =========================================================
+     โครงหน้าจอ — เล็กพอที่จะเปิดค้างข้างจอได้ (~350×560)
+     ========================================================= */
+  .stage {
+    width: 350px;
+    max-width: 100vw;
+    height: min(560px, 100dvh);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px 4px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .brand { letter-spacing: .2px; }
+  .themes { display: flex; gap: 4px; }
+  .themes button {
+    font: inherit;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--panel-line);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    opacity: .75;
+  }
+  .themes button.on { opacity: 1; font-weight: 700; box-shadow: 0 0 0 2px rgba(255, 169, 77, .45) inset; }
+
+  /* =========================================================
+     เวที: ฟองคำพูด + น้องส้ม + สวน
+     ========================================================= */
+  .scene {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 62px;      /* ให้น้องส้มยืนบนเนินหญ้า */
+    overflow: hidden;
+  }
+
+  /* ฟองคำพูดภาษาไทยเหนือหัวน้องส้ม */
+  .bubble {
+    position: absolute;
+    top: 2px;
+    z-index: 5;
+    max-width: 88%;
+    padding: 8px 12px;
+    border-radius: 14px;
+    background: var(--bubble);
+    color: #5B4636;
+    font-size: 13.5px;
+    line-height: 1.45;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(90, 60, 30, .14);
+    transition: opacity .2s;
+  }
+  .bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    margin-left: -7px;
+    border: 7px solid transparent;
+    border-top-color: var(--bubble);
+    border-bottom: 0;
+  }
+
+  /* เนินหญ้า */
+  .ground {
+    position: absolute;
+    left: -10%;
+    right: -10%;
+    bottom: 0;
+    height: 96px;
+    z-index: 1;
+    background: var(--grass);
+    border-radius: 50% 50% 0 0 / 54px 54px;
+  }
+  .ground::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: repeating-linear-gradient(90deg,
+      transparent 0 15px, var(--grass-line) 15px 17px);
+  }
+
+  /* สวนที่อ่านมาจาก garden.json */
+  .plants {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    height: 120px;
+    z-index: 1;
+    transition: filter .8s ease;
+  }
+  .plant {
+    position: absolute;
+    transform: translateX(-50%);
+    transform-origin: 50% 100%;
+    transition: transform .7s ease, filter .7s ease;
+  }
+  /* ใบเริ่มเหลืองเมื่อขาดสตรีครายวัน */
+  .plants.yellow-1 { filter: sepia(.35) saturate(1.35) hue-rotate(-14deg); }
+  .plants.yellow-2 { filter: sepia(.75) saturate(1.6) hue-rotate(-26deg) brightness(1.02); }
+  /* ใบเหี่ยวชั่วคราวตอนสถานะ error */
+  .plants.wilt .plant { transform: translateX(-50%) rotate(13deg) scaleY(.86); filter: saturate(.55); }
+
+  /* น้องส้ม (โหลดจาก sprites/<สถานะ>.svg) */
+  #sprite {
+    position: relative;
+    z-index: 3;
+    display: block;
+    width: 220px;
+    height: 200px;
+    max-width: 78%;
+    max-height: 46%;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* ดอกไม้บลาสต์รอบตัวตอน success */
+  .bloom-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .bloom {
+    position: absolute;
+    transform: translate(-50%, -50%) scale(0);
+    animation: bloomPop 3.6s ease-out both;
+  }
+  @keyframes bloomPop {
+    0%   { transform: translate(-50%, -50%) scale(0) rotate(-40deg); opacity: 0 }
+    18%  { transform: translate(-50%, -50%) scale(1.2) rotate(8deg);  opacity: 1 }
+    75%  { transform: translate(-50%, -50%) scale(1)  rotate(0);     opacity: 1 }
+    100% { transform: translate(-50%, -62%) scale(.5);               opacity: 0 }
+  }
+
+  /* ===== ท่าทางระดับหน้าเว็บ (ใช้ได้แม้เปลี่ยนภาพน้องส้ม) ===== */
+  #sprite { transition: opacity .2s; }
+  body.st-thinking #sprite { animation: nod 3.4s ease-in-out infinite; }
+  body.st-coding   #sprite { animation: waddle 1.1s ease-in-out infinite; }
+  body.st-success  #sprite { animation: hop 1.9s ease-in-out infinite; }
+  body.st-error    #sprite { animation: sob 2.6s ease-in-out infinite; }
+  body.st-done     #sprite { animation: calm 4.6s ease-in-out infinite; }
+  body.st-idle     #sprite { animation: calm 5.2s ease-in-out infinite; }
+  @keyframes nod    { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+  @keyframes waddle { 0%, 100% { transform: rotate(-2deg) translateY(0) }
+                      50%      { transform: rotate(2deg) translateY(-3px) } }
+  @keyframes hop {
+    0%, 100% { transform: translateY(0) }
+    12%      { transform: translateY(-16px) scale(1, 1.05) }
+    26%      { transform: translateY(0) scale(1.05, .93) }
+    36%      { transform: translateY(0) scale(1, 1) }
+  }
+  @keyframes sob  { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(2px) } }
+  @keyframes calm { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+
+  /* =========================================================
+     แผงสถานะด้านล่าง
+     ========================================================= */
+  .panel {
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px 12px;
+    background: var(--panel);
+    border-top: 1px solid var(--panel-line);
+    border-radius: 16px 16px 0 0;
+    backdrop-filter: blur(6px);
+  }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .pill {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #ECECF2;
+    color: #6B6B80;
+    transition: background .25s, color .25s;
+  }
+  body.st-thinking .pill { background: #FFF1C8; color: #96761A }
+  body.st-coding   .pill { background: #D9F3E4; color: #2E7D5B }
+  body.st-success  .pill { background: #FFE7B3; color: #A96B00 }
+  body.st-error    .pill { background: #FFDCDC; color: #B4453F }
+  body.st-done     .pill { background: #E4E0FF; color: #5B4FA8 }
+  body.st-idle     .pill { background: #E7E7EF; color: #6B6B85 }
+  html[data-theme="night"] .pill { color: #2A2440; }
+
+  .fresh { font-size: 11px; color: var(--soft); }
+  .stats { font-size: 12.5px; font-weight: 600; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
+  .stats span { white-space: nowrap; }
+  .stats .muted { color: var(--soft); font-weight: 400; }
+  .hint { margin: 0; font-size: 11px; color: var(--soft); line-height: 1.5; }
+
+  @media (max-height: 520px) {
+    #sprite { width: 170px; height: 155px; }
+    .scene { padding-bottom: 48px; }
+    .ground { height: 76px; }
+  }
+</style>
+</head>
+<body class="st-idle">
+
+<main class="stage">
+  <header class="topbar">
+    <span class="brand">🍊 Som's Garden</span>
+    <nav class="themes">
+      <button data-set-theme="transparent">โปร่งใส</button>
+      <button data-set-theme="pastel">พาสเทล</button>
+      <button data-set-theme="night">กลางคืน</button>
+    </nav>
+  </header>
+
+  <section class="scene">
+    <div class="bubble"><span id="bubbleText">กำลังตื่นอยู่...</span></div>
+    <div class="bloom-layer" id="bloomLayer"></div>
+    <!-- น้องส้ม: โหลดท่าทางจาก sprites/<สถานะ>.svg (เปลี่ยนไฟล์ชื่อเดิมได้ภายหลัง) -->
+    <img id="sprite" src="sprites/idle.svg" alt="น้องส้ม แมวส้มอ้วนประจำสวน" width="220" height="200" draggable="false">
+    <div class="ground">
+      <div class="plants" id="plants"></div>
+    </div>
+  </section>
+
+  <footer class="panel">
+    <div class="row">
+      <span class="pill" id="statusPill">ตื่นอยู่</span>
+      <span class="fresh" id="freshness">—</span>
+    </div>
+    <div class="row stats">
+      <span id="plantCount">🌳 ต้นไม้ 0</span>
+      <span id="streak">🔥 สตรีค 0 วัน</span>
+      <span class="muted" id="leafState"></span>
+    </div>
+    <p class="hint" id="hint">อ่าน status.json ทุก 1 วินาที · ไม่อัปเดตเกิน 2 นาที = น้องส้มหลับเอง</p>
+  </footer>
+</main>
+
+<script>
+/* =========================================================
+   Som's Garden — สคริปต์หลัก (ไม่ใช้ framework)
+   หลักการ: อ่าน status.json + garden.json ทุก 1 วินาที
+   แล้วสลับท่าทางน้องส้ม + วาดสวนให้ตรงกับไฟล์
+   ========================================================= */
+(function () {
+  'use strict';
+
+  var POLL_MS   = 1000;              // ความถี่ในการอ่านไฟล์ (มิลลิวินาที)
+  var IDLE_MS   = 2 * 60 * 1000;     // ไม่อัปเดตเกิน 2 นาที → หลับเอง
+  var STATUSES  = ['thinking', 'coding', 'success', 'error', 'done', 'idle'];
+
+  // คำพูดเริ่มต้นของแต่ละท่า (ภาษาไทย)
+  var LINES = {
+    thinking: 'อืม... ขอคิดแป๊บนะ 🐾',
+    coding:   'กำลังทำอยู่นะ~ รอหน่อยสักครู่ 🌱',
+    success:  'เย้! ผ่านทุกอย่างแล้ว 🎉',
+    error:    'แง... มีอะไรพังง่ะ 😿',
+    done:     'เสร็จแล้ว! ขอพักเหนื่อยหน่อย 😸',
+    idle:     'ไม่มีใครอยู่เลย... ขอหลับก่อน Zzz 😴'
+  };
+  var LABELS = {
+    thinking: 'กำลังคิด', coding: 'กำลังเขียนโค้ด', success: 'สำเร็จ',
+    error: 'มีข้อผิดพลาด', done: 'งานเสร็จแล้ว', idle: 'หลับ / ไม่อัปเดต'
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var sprite = $('sprite'), bubbleText = $('bubbleText'), statusPill = $('statusPill');
+  var freshness = $('freshness'), plantCount = $('plantCount'), streakEl = $('streak');
+  var leafState = $('leafState'), hint = $('hint'), plantsBox = $('plants');
+  var bloomLayer = $('bloomLayer');
+
+  var currentStatus = null;   // สถานะที่แสดงอยู่ตอนนี้
+  var lastPlantN = -1, lastStreak = -99, lastYellow = -99;
+  var wiltTimer = null, bloomTimer = null;
+
+  /* ---------- ธีม (จำค่าไว้ใน localStorage) ---------- */
+  var themeBtns = Array.prototype.slice.call(document.querySelectorAll('[data-set-theme]'));
+  function markTheme(t) {
+    themeBtns.forEach(function (b) { b.classList.toggle('on', b.dataset.setTheme === t); });
+  }
+  var savedTheme = localStorage.getItem('som-garden-theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+  markTheme(document.documentElement.dataset.theme);
+  themeBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.documentElement.dataset.theme = b.dataset.setTheme;
+      localStorage.setItem('som-garden-theme', b.dataset.setTheme);
+      markTheme(b.dataset.setTheme);
+    });
+  });
+
+  /* ---------- โหลด JSON (กัน cache ของ browser) ---------- */
+  function getJSON(file) {
+    return fetch(file + '?t=' + Date.now(), { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) throw new Error(file + ' → ' + res.status);
+      return res.json();
+    });
+  }
+
+  /* ---------- ตัดสินสถานะที่จะแสดงจริง ---------- */
+  function effective(raw) {
+    var t = Date.parse(raw.updatedAt || '');
+    var stale = !t || (Date.now() - t) > IDLE_MS;   // เกิน 2 นาที = หลับเอง
+    if (stale) return { status: 'idle', line: 'เงียบจัง... ขอหลับก่อน Zzz 😴', stale: true, updatedAt: t };
+    var status = STATUSES.indexOf(raw.status) >= 0 ? raw.status : 'idle';
+    var msg = (raw.message || '').trim();
+    return { status: status, line: msg || LINES[status], stale: false, updatedAt: t };
+  }
+
+  /* ---------- สลับท่าทางน้องส้ม ---------- */
+  function setStatus(s) {
+    if (s.status !== currentStatus) {
+      currentStatus = s.status;
+      sprite.src = 'sprites/' + s.status + '.svg';   // เปลี่ยนภาพตามท่า
+      document.body.className = 'st-' + s.status;     // เปลี่ยนแอนิเมชัน/สีป้าย
+      if (s.status === 'success') spawnBloom();       // ดอกไม้บานรอบตัว
+      if (s.status === 'error') wiltPlants();         // ใบไม้เหี่ยวชั่วคราว
+      if (s.status !== 'error') clearWilt();
+    }
+    bubbleText.textContent = s.line;
+    statusPill.textContent = LABELS[s.status];
+    freshness.textContent = s.updatedAt ? agoText(s.updatedAt) : 'ยังไม่มีการอัปเดต';
+  }
+
+  function agoText(ts) {
+    var sec = Math.max(0, Math.round((Date.now() - ts) / 1000));
+    if (sec < 60) return 'อัปเดตเมื่อ ' + sec + ' วินาทีที่แล้ว';
+    return 'อัปเดตเมื่อ ' + Math.round(sec / 60) + ' นาทีที่แล้ว';
+  }
+
+  /* ---------- ดอกไม้บานตอนสำเร็จ ---------- */
+  var BLOOM_POS = [[-78, -6], [-48, -56], [0, -84], [48, -56], [78, -6], [-96, 34], [96, 34]];
+  function spawnBloom() {
+    bloomLayer.innerHTML = '';
+    BLOOM_POS.forEach(function (pos, i) {
+      var b = document.createElement('div');
+      b.className = 'bloom';
+      b.style.left = 'calc(50% + ' + pos[0] + 'px)';
+      b.style.top = 'calc(56% + ' + pos[1] + 'px)';
+      b.style.animationDelay = (i * 0.07) + 's';
+      b.innerHTML = miniFlower(i);
+      bloomLayer.appendChild(b);
+    });
+    clearTimeout(bloomTimer);
+    bloomTimer = setTimeout(function () { bloomLayer.innerHTML = ''; }, 4200);
+  }
+  var PETALS = ['#FF9BB0', '#FFC46B', '#C9A6E8', '#FF8FA8', '#9ED8A0'];
+  function miniFlower(i) {
+    var c = PETALS[i % PETALS.length];
+    return '<svg width="30" height="30" viewBox="0 0 30 30">' +
+      '<g fill="' + c + '">' +
+      '<circle cx="15" cy="7" r="5.5"/><circle cx="22" cy="12" r="5.5"/>' +
+      '<circle cx="19.5" cy="20.5" r="5.5"/><circle cx="10.5" cy="20.5" r="5.5"/>' +
+      '<circle cx="8" cy="12" r="5.5"/></g>' +
+      '<circle cx="15" cy="14.5" r="4.5" fill="#FFE27A"/></svg>';
+  }
+
+  function wiltPlants() {
+    plantsBox.classList.add('wilt');
+    clearTimeout(wiltTimer);
+    wiltTimer = setTimeout(clearWilt, 4500);   // เหี่ยวแค่ชั่วคราว ~4.5 วิ
+  }
+  function clearWilt() {
+    plantsBox.classList.remove('wilt');
+    clearTimeout(wiltTimer);
+  }
+
+  /* ---------- วาดสวนจาก garden.json ---------- */
+  var KIND_OF = { fix: 'flower', feature: 'tree', docs: 'bush' };  // ชนิดงาน → ชนิดต้นไม้
+  var KIND_Z  = { tree: 1, bush: 2, flower: 3 };                    // ต้นใหญ่อยู่หลัง
+
+  function renderGarden(g) {
+    var plants = Array.isArray(g.plants) ? g.plants : [];
+
+    // วาดใหม่เฉพาะเมื่อจำนวนต้นไม้เปลี่ยน
+    if (plants.length !== lastPlantN) {
+      lastPlantN = plants.length;
+      plantsBox.innerHTML = '';
+      plants.forEach(function (p, i) { plantsBox.appendChild(makePlant(p, i)); });
+      plantCount.textContent = '🌳 ต้นไม้ ' + plants.length;
+    }
+
+    // สตรีครายวัน
+    var streak = typeof g.streak === 'number' ? g.streak : 0;
+    if (streak !== lastStreak) {
+      lastStreak = streak;
+      streakEl.textContent = '🔥 สตรีค ' + streak + ' วัน';
+    }
+
+    // ใบไม้เริ่มเหลืองถ้าขาดสตรีค
+    var lastTend = g.lastDone || plants.map(function (p) { return p.date; }).sort().pop() || null;
+    var level = yellowLevel(lastTend);
+    if (level !== lastYellow) {
+      lastYellow = level;
+      plantsBox.classList.remove('yellow-1', 'yellow-2');
+      if (level > 0) plantsBox.classList.add('yellow-' + level);
+      if (level === 0) leafState.textContent = '';
+      else {
+        var gap = daysAgo(lastTend);
+        leafState.textContent = (level === 1 ? '🍂 ใบเริ่มเหลือง' : '🥀 ใบเหี่ยว') + ' (ขาด ' + gap + ' วัน)';
+      }
+    }
+  }
+
+  function daysAgo(dateStr) {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var d = new Date(dateStr + 'T00:00:00');
+    return Math.round((today - d) / 86400000);
+  }
+  // 0 = เขียวชอุ่ม, 1 = เริ่มเหลือง (ขาด 1 วัน), 2 = เหลืองจัด (ขาดหลายวัน)
+  function yellowLevel(dateStr) {
+    if (!dateStr) return 0;
+    var gap = daysAgo(dateStr);
+    if (gap <= 1) return 0;
+    return gap === 2 ? 1 : 2;
+  }
+
+  function makePlant(p, i) {
+    var kind = p.kind || KIND_OF[p.type] || 'flower';
+    var f = (i * 0.6180339887) % 1;              // กระจายตำแหน่งแบบอัตราส่วนทอง (ไม่กระจุก)
+    var x = 12 + f * 76;                          // 12%–88% ของความกว้างสนาม
+    var scale = 0.8 + ((i * 13) % 5) * 0.1;      // ขนาด varied 0.8–1.2
+    var el = document.createElement('div');
+    el.className = 'plant';
+    el.style.left = x + '%';
+    el.style.bottom = ((i % 4) * 3) + 'px';
+    el.style.zIndex = KIND_Z[kind] || 3;
+    el.innerHTML = plantSVG(kind, scale, i);
+    return el;
+  }
+
+  // วาดต้นไม้ด้วย SVG ตามชนิด: fix = ดอกไม้, feature = ต้นไม้ใหญ่, docs = พุ่มไม้
+  function plantSVG(kind, scale, i) {
+    if (kind === 'tree') {
+      var w = Math.round(64 * scale), h = Math.round(84 * scale);
+      var g1 = ['#7FC97F', '#8ED18F', '#6FBF73'][i % 3];
+      return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 64 84">' +
+        '<rect x="28" y="46" width="9" height="36" rx="4" fill="#C08552"/>' +
+        '<circle cx="32" cy="30" r="21" fill="' + g1 + '"/>' +
+        '<circle cx="16" cy="42" r="14" fill="' + g1 + '"/>' +
+        '<circle cx="48" cy="42" r="14" fill="' + g1 + '"/>' +
+        '<circle cx="24" cy="24" r="6" fill="#A5DFA5" opacity=".8"/></svg>';
+    }
+    if (kind === 'bush') {
+      var bw = Math.round(58 * scale), bh = Math.round(46 * scale);
+      return '<svg width="' + bw + '" height="' + bh + '" viewBox="0 0 58 46">' +
+        '<ellipse cx="29" cy="32" rx="27" ry="14" fill="#79C17C"/>' +
+        '<circle cx="17" cy="24" r="13" fill="#8ED18F"/>' +
+        '<circle cx="38" cy="22" r="15" fill="#79C17C"/>' +
+        '<circle cx="14" cy="20" r="3" fill="#FF8FA8"/>' +
+        '<circle cx="40" cy="16" r="3" fill="#FFC46B"/>' +
+        '<circle cx="30" cy="30" r="3" fill="#FF8FA8"/></svg>';
+    }
+    var fw = Math.round(38 * scale), fh = Math.round(58 * scale);
+    var pc = PETALS[i % PETALS.length];
+    return '<svg width="' + fw + '" height="' + fh + '" viewBox="0 0 38 58">' +
+      '<path d="M19 58 V26" stroke="#6FBF73" stroke-width="4" stroke-linecap="round" fill="none"/>' +
+      '<ellipse cx="10" cy="40" rx="8" ry="5" fill="#8ED18F" transform="rotate(-22 10 40)"/>' +
+      '<g fill="' + pc + '"><circle cx="19" cy="12" r="6"/><circle cx="27" cy="18" r="6"/>' +
+      '<circle cx="24" cy="27" r="6"/><circle cx="14" cy="27" r="6"/><circle cx="11" cy="18" r="6"/></g>' +
+      '<circle cx="19" cy="20" r="5" fill="#FFE27A"/></svg>';
+  }
+
+  /* ---------- คำใบ้เมื่อเปิดผ่านไฟล์ตรง ๆ หรือยังไม่มี status.json ---------- */
+  function showHint() {
+    hint.textContent = location.protocol === 'file:'
+      ? '⚠️ เปิดผ่าน local server นะ เช่น: npx serve .  (fetch อ่านไฟล์ไม่ได้ตอนเปิดไฟล์ตรง)'
+      : '⚠️ ยังไม่เจอ status.json — ลองรัน: node set-status.js coding "กำลังทำของดี"';
+  }
+  function hideHint() {
+    hint.textContent = 'อ่าน status.json ทุก 1 วินาที · ไม่อัปเดตเกิน 2 นาที = น้องส้มหลับเอง';
+  }
+
+  /* ---------- วนอ่านไฟล์ทุก 1 วินาที ---------- */
+  function tick() {
+    getJSON('status.json').then(function (raw) {
+      hideHint();
+      setStatus(effective(raw));
+    }).catch(showHint);
+
+    getJSON('garden.json').then(renderGarden).catch(function () { /* ยังไม่มีไฟล์สวนก็ข้ามไป */ });
+  }
+
+  // โหลดภาพทุกท่าไว้ล่วงหน้า เวลาสลับท่าจะไม่กระตุก
+  STATUSES.forEach(function (s) { var im = new Image(); im.src = 'sprites/' + s + '.svg'; });
+
+  tick();
+  setInterval(tick, POLL_MS);
+})();
+</script>
+</body>
+</html>

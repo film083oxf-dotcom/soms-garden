@@ -1,0 +1,9 @@
+{
+  "plants": [
+    { "type": "feature", "kind": "tree", "date": "2026-10-13", "addedAt": "2026-10-13T10:05:00.000Z" },
+    { "type": "fix", "kind": "flower", "date": "2026-10-14", "addedAt": "2026-10-14T15:40:00.000Z" },
+    { "type": "docs", "kind": "bush", "date": "2026-10-15", "addedAt": "2026-10-15T08:20:00.000Z" }
+  ],
+  "streak": 3,
+  "lastDone": "2026-10-15"
+}

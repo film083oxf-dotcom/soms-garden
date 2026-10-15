@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="220" height="200">
+  <title>น้องส้ม — สำเร็จ!</title>
+  <!-- ท่า: กระโดดตัวลอยนิดเดียว (หน้าเว็บจะเด้งให้ตกตุ้บเอง) -->
+  <style>
+    .spark { animation: spark 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .spark2 { animation-delay: .4s } .spark3 { animation-delay: .8s }
+    @keyframes spark { 0%,100% { opacity: .35; transform: scale(.8) } 50% { opacity: 1; transform: scale(1.15) } }
+  </style>
+
+  <!-- เงา (เล็กลง = ตัวลอยจากพื้น) -->
+  <ellipse cx="110" cy="192" rx="46" ry="7" fill="#000" opacity=".07"/>
+
+  <!-- เส้นกระแทกตอนตกพื้น -->
+  <path d="M56 180 l-8 12 M110 184 l0 12 M164 180 l8 12" stroke="#F0C26B" stroke-width="5" stroke-linecap="round" fill="none"/>
+
+  <g transform="translate(0,-18)">
+    <!-- หางชี้ฟ้า -->
+    <g>
+      <path d="M160 146 C194 142 206 112 192 90" fill="none" stroke="#FFA94D" stroke-width="15" stroke-linecap="round"/>
+      <path d="M199 104 C203 99 203 95 201 91" fill="none" stroke="#F08A3C" stroke-width="14" stroke-linecap="round"/>
+      <animateTransform attributeName="transform" type="rotate"
+        values="-8 160 146; 8 160 146; -8 160 146" dur="1s" repeatCount="indefinite"/>
+    </g>
+
+    <!-- ตัวกลม -->
+    <ellipse cx="110" cy="134" rx="54" ry="46" fill="#FFA94D"/>
+    <ellipse cx="110" cy="144" rx="34" ry="31" fill="#FFE9CF"/>
+    <path d="M58 120 q13 7 13 19" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M162 120 q-13 7 -13 19" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+    <!-- ขาถีบออกตอนลอย -->
+    <ellipse cx="66" cy="152" rx="15" ry="11" fill="#FFE9CF" transform="rotate(-32 66 152)"/>
+    <ellipse cx="154" cy="152" rx="15" ry="11" fill="#FFE9CF" transform="rotate(32 154 152)"/>
+    <ellipse cx="88" cy="172" rx="15" ry="11" fill="#FFE9CF" transform="rotate(-12 88 172)"/>
+    <ellipse cx="132" cy="172" rx="15" ry="11" fill="#FFE9CF" transform="rotate(12 132 172)"/>
+
+    <!-- หู -->
+    <path d="M66 52 L66 12 L104 42 Z" fill="#FFA94D"/>
+    <path d="M77 48 L78 26 L95 43 Z" fill="#FFC9C9"/>
+    <path d="M154 52 L154 12 L116 42 Z" fill="#FFA94D"/>
+    <path d="M143 48 L142 26 L125 43 Z" fill="#FFC9C9"/>
+
+    <!-- หัว + แก้มป่อง -->
+    <circle cx="110" cy="84" r="50" fill="#FFA94D"/>
+    <circle cx="66" cy="100" r="20" fill="#FFA94D"/>
+    <circle cx="154" cy="100" r="20" fill="#FFA94D"/>
+    <path d="M101 50 V61 M110 48 V60 M119 50 V61" stroke="#F08A3C" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- ตาปิดยิ้ม (^ ^) -->
+    <path d="M78 88 q12 -15 24 0" stroke="#3B2B26" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M118 88 q12 -15 24 0" stroke="#3B2B26" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+
+    <!-- ปากอ้าดีใจ -->
+    <ellipse cx="110" cy="112" rx="22" ry="13" fill="#FFE9CF"/>
+    <path d="M97 106 q13 20 26 0 q-13 7 -26 0 z" fill="#B8564E"/>
+    <path d="M104 114 q6 8 12 0 z" fill="#FF8E86"/>
+    <ellipse cx="64" cy="108" rx="12" ry="8" fill="#FF8FA8" opacity=".7"/>
+    <ellipse cx="156" cy="108" rx="12" ry="8" fill="#FF8FA8" opacity=".7"/>
+
+    <!-- หนวด -->
+    <path d="M54 106 L34 101 M54 114 L32 115 M54 122 L34 128" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M166 106 L186 101 M166 114 L188 115 M166 122 L186 128" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- ประกายดาว -->
+  <path class="spark" d="M36 52 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#FFD66B"/>
+  <path class="spark spark2" d="M186 44 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#FFD66B"/>
+  <path class="spark spark3" d="M176 96 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2 z" fill="#FFC46B"/>
+</svg>

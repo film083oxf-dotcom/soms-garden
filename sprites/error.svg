@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="220" height="200">
+  <title>น้องส้ม — มีข้อผิดพลาด</title>
+  <!-- ท่า: นอนแผ่ ตาแบะ น้ำตาเม็ดเล็ก ๆ -->
+  <style>
+    .tear { animation: tear 1.8s ease-in infinite; opacity: 0; }
+    .tear2 { animation-delay: .9s }
+    @keyframes tear {
+      0%   { transform: translateY(0);    opacity: 0 }
+      15%  { opacity: 1 }
+      100% { transform: translateY(26px); opacity: 0 }
+    }
+    .quiver { animation: quiver 3s ease-in-out infinite; }
+    @keyframes quiver { 0%,100% { transform: translateY(0) } 50% { transform: translateY(1.5px) } }
+  </style>
+
+  <!-- เงา -->
+  <ellipse cx="110" cy="190" rx="88" ry="9" fill="#000" opacity=".08"/>
+
+  <g class="quiver">
+    <!-- หางห้อยไม่มีแรง -->
+    <path d="M196 168 C214 170 218 180 212 188" fill="none" stroke="#F08A3C" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- ตัวนอนแผ่คว่ำ -->
+    <ellipse cx="138" cy="160" rx="66" ry="30" fill="#FFA94D"/>
+    <path d="M190 148 q-11 6 -11 17" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M162 142 q-11 6 -11 17" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <!-- ขาหน้ายืดข้างหน้า -->
+    <ellipse cx="52" cy="186" rx="20" ry="9" fill="#FFE9CF"/>
+    <ellipse cx="84" cy="188" rx="20" ry="9" fill="#FFE9CF"/>
+    <!-- ขาหลังแผ่ -->
+    <ellipse cx="182" cy="184" rx="19" ry="9" fill="#FFE9CF" transform="rotate(10 182 184)"/>
+
+    <!-- หูแบะ -->
+    <path d="M22 128 L14 100 L46 112 Z" fill="#FFA94D"/>
+    <path d="M28 124 L24 108 L40 115 Z" fill="#FFC9C9"/>
+    <path d="M78 122 L88 96 L56 106 Z" fill="#FFA94D"/>
+    <path d="M72 119 L80 104 L62 110 Z" fill="#FFC9C9"/>
+
+    <!-- หัวหมอบกับพื้น -->
+    <circle cx="52" cy="152" r="42" fill="#FFA94D"/>
+    <circle cx="28" cy="164" r="16" fill="#FFA94D"/>
+    <circle cx="76" cy="164" r="16" fill="#FFA94D"/>
+    <path d="M46 116 V126 M54 115 V125" stroke="#F08A3C" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- ตาแบะ (ม่านตาเล็กจิ๋ว) -->
+    <ellipse cx="36" cy="146" rx="12" ry="13" fill="#fff"/>
+    <ellipse cx="66" cy="146" rx="12" ry="13" fill="#fff"/>
+    <circle cx="37" cy="148" r="4.5" fill="#3B2B26"/>
+    <circle cx="67" cy="148" r="4.5" fill="#3B2B26"/>
+    <!-- คิ้วตก -->
+    <path d="M25 130 q11 -4 20 2" stroke="#D2813F" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M77 130 q-11 -4 -20 2" stroke="#D2813F" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+    <!-- ปากส่ายเศร้า -->
+    <ellipse cx="51" cy="166" rx="18" ry="11" fill="#FFE9CF"/>
+    <path d="M46 159 h11 l-5.5 5.5 z" fill="#EF6E6E" stroke="#EF6E6E" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M41 172 q5 -5 10 0 q5 5 10 0" stroke="#D2813F" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="24" cy="164" rx="10" ry="6" fill="#FF9BB0" opacity=".5"/>
+    <ellipse cx="78" cy="164" rx="10" ry="6" fill="#FF9BB0" opacity=".5"/>
+
+    <!-- หนวดห้อย -->
+    <path d="M30 166 L10 168 M30 172 L11 178" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M72 166 L92 168 M72 172 L91 178" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- น้ำตาเม็ดเล็ก ๆ -->
+    <ellipse class="tear" cx="34" cy="160" rx="3.5" ry="5" fill="#7EC8E3"/>
+    <ellipse class="tear tear2" cx="68" cy="160" rx="3.5" ry="5" fill="#7EC8E3"/>
+  </g>
+</svg>

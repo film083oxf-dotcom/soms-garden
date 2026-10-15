@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="220" height="200">
+  <title>น้องส้ม — กำลังเขียนโค้ด (รดน้ำต้นกล้า)</title>
+  <!-- ท่า: ถือบัวรดน้ำ เดินต้วมเตี้ยม รดน้ำต้นกล้า -->
+  <style>
+    .drop { animation: drop .9s linear infinite; opacity: 0; }
+    .drop2 { animation-delay: .3s } .drop3 { animation-delay: .6s }
+    @keyframes drop {
+      0%   { transform: translateY(0);    opacity: 0 }
+      20%  { opacity: 1 }
+      100% { transform: translateY(22px); opacity: 0 }
+    }
+  </style>
+
+  <!-- เงา -->
+  <ellipse cx="115" cy="190" rx="70" ry="9" fill="#000" opacity=".08"/>
+
+  <!-- ต้นกล้า + ดิน (อยู่นิ่ง ๆ ที่พื้น) -->
+  <ellipse cx="24" cy="190" rx="16" ry="5" fill="#C79A6B"/>
+  <path d="M24 190 q0 -12 1 -18" stroke="#6FBF73" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="17" cy="172" rx="8" ry="5" fill="#7BC47F" transform="rotate(-24 17 172)"/>
+  <ellipse cx="32" cy="169" rx="8" ry="5" fill="#8ED18F" transform="rotate(24 32 169)"/>
+  <!-- น้ำหยดจากบัว -->
+  <ellipse class="drop" cx="46" cy="176" rx="3" ry="4.5" fill="#7EC8E3"/>
+  <ellipse class="drop drop2" cx="40" cy="174" rx="3" ry="4.5" fill="#7EC8E3"/>
+  <ellipse class="drop drop3" cx="52" cy="175" rx="3" ry="4.5" fill="#7EC8E3"/>
+
+  <!-- น้องส้ม (ขยับขึ้นลงตอนเดิน) -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0 0; 0 -3; 0 0" dur=".75s" repeatCount="indefinite"/>
+
+    <!-- หางชี้ขึ้น -->
+    <g>
+      <path d="M170 158 C204 156 214 126 200 104" fill="none" stroke="#FFA94D" stroke-width="15" stroke-linecap="round"/>
+      <path d="M207 118 C210 113 210 109 208 105" fill="none" stroke="#F08A3C" stroke-width="14" stroke-linecap="round"/>
+      <animateTransform attributeName="transform" type="rotate"
+        values="-6 170 158; 7 170 158; -6 170 158" dur="1.4s" repeatCount="indefinite"/>
+    </g>
+
+    <!-- ตัว เดินเขย่ง -->
+    <ellipse cx="128" cy="144" rx="54" ry="45" fill="#FFA94D"/>
+    <ellipse cx="126" cy="154" rx="34" ry="31" fill="#FFE9CF"/>
+    <path d="M176 130 q-12 7 -12 19" stroke="#F08A3C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <!-- เท้าหลัง/หน้าตอนก้าว -->
+    <ellipse cx="152" cy="182" rx="17" ry="10" fill="#FFE9CF"/>
+    <ellipse cx="104" cy="184" rx="16" ry="9" fill="#FFE9CF"/>
+
+    <!-- หู -->
+    <path d="M74 52 L76 12 L112 42 Z" fill="#FFA94D"/>
+    <path d="M85 48 L87 26 L104 43 Z" fill="#FFC9C9"/>
+    <path d="M160 52 L154 12 L122 40 Z" fill="#FFA94D"/>
+    <path d="M149 48 L145 26 L129 42 Z" fill="#FFC9C9"/>
+
+    <!-- หัว + แก้มป่อง -->
+    <circle cx="116" cy="88" r="50" fill="#FFA94D"/>
+    <circle cx="74" cy="104" r="20" fill="#FFA94D"/>
+    <circle cx="158" cy="104" r="20" fill="#FFA94D"/>
+    <path d="M107 54 V65 M116 52 V64 M125 54 V65" stroke="#F08A3C" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- ตาจ้องไปที่ต้นกล้า -->
+    <ellipse cx="98" cy="86" rx="13" ry="14" fill="#fff"/>
+    <ellipse cx="136" cy="86" rx="13" ry="14" fill="#fff"/>
+    <circle cx="94" cy="89" r="9" fill="#3B2B26"/>
+    <circle cx="132" cy="89" r="9" fill="#3B2B26"/>
+    <circle cx="91" cy="85" r="3.4" fill="#fff"/>
+    <circle cx="129" cy="85" r="3.4" fill="#fff"/>
+
+    <!-- ปากยิ้ม -->
+    <ellipse cx="116" cy="115" rx="21" ry="13" fill="#FFE9CF"/>
+    <path d="M110 108 h12 l-6 6.5 z" fill="#EF6E6E" stroke="#EF6E6E" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M116 115 q-6 9 -12 2" stroke="#D2813F" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M122 116 q4 5 9 1" stroke="#D2813F" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="72" cy="112" rx="11" ry="7" fill="#FF9BB0" opacity=".55"/>
+    <ellipse cx="160" cy="112" rx="11" ry="7" fill="#FF9BB0" opacity=".55"/>
+
+    <!-- หนวด -->
+    <path d="M64 108 L44 103 M64 116 L42 117 M64 124 L44 130" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M168 108 L188 103 M168 116 L190 117 M168 124 L188 130" stroke="#E8A77A" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- แขนถือบัวรดน้ำ -->
+    <path d="M94 142 Q80 136 74 142" stroke="#FFA94D" stroke-width="13" fill="none" stroke-linecap="round"/>
+    <ellipse cx="72" cy="143" rx="12" ry="10" fill="#FFE9CF"/>
+
+    <!-- บัวรดน้ำ -->
+    <path d="M46 142 q14 -16 28 0" stroke="#64B5A6" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect x="30" y="142" width="46" height="34" rx="9" fill="#8FD3C7"/>
+    <path d="M30 156 L10 168" stroke="#8FD3C7" stroke-width="9" stroke-linecap="round"/>
+    <path d="M14 166 l8 3" stroke="#64B5A6" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="42" cy="159" r="5" fill="#64B5A6" opacity=".55"/>
+  </g>
+</svg>

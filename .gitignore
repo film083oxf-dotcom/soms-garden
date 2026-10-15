@@ -1,0 +1,19 @@
+# dependencies / tooling
+node_modules/
+
+# logs & caches
+*.log
+npm-debug.log*
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# editors
+.vscode/
+.idea/
+
+# secrets (กันเผลอ commit คีย์ลับ)
+.env
+.env.*
