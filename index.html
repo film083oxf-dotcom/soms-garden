@@ -172,13 +172,14 @@
   /* ใบเหี่ยวชั่วคราวตอนสถานะ error */
   .plants.wilt .plant { transform: translateX(-50%) rotate(13deg) scaleY(.86); filter: saturate(.55); }
 
-  /* น้องส้ม (โหลดจาก sprites/<สถานะ>.svg) */
+  /* น้องส้ม (โหลดจาก sprites/<สถานะ>.png · ถ้าไม่พบจะ fallback เป็น .svg) */
   #sprite {
     position: relative;
     z-index: 3;
     display: block;
     width: 220px;
     height: 200px;
+    object-fit: contain;
     max-width: 78%;
     max-height: 46%;
     user-select: none;
@@ -279,8 +280,9 @@
   <section class="scene">
     <div class="bubble"><span id="bubbleText">กำลังตื่นอยู่...</span></div>
     <div class="bloom-layer" id="bloomLayer"></div>
-    <!-- น้องส้ม: โหลดท่าทางจาก sprites/<สถานะ>.svg (เปลี่ยนไฟล์ชื่อเดิมได้ภายหลัง) -->
-    <img id="sprite" src="sprites/idle.svg" alt="น้องส้ม แมวส้มอ้วนประจำสวน" width="220" height="200" draggable="false">
+    <!-- น้องส้ม: โหลดท่าทางจาก sprites/<สถานะ>.png (ถ้าไม่พบ ระบบจะ fallback เป็น .svg ให้เอง) -->
+    <img id="sprite" src="sprites/idle.png" alt="น้องส้ม แมวส้มอ้วนประจำสวน" width="220" height="200" draggable="false"
+         onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='sprites/idle.svg';}">
     <div class="ground">
       <div class="plants" id="plants"></div>
     </div>
@@ -371,11 +373,24 @@
     return { status: status, line: msg || LINES[status], stale: false, updatedAt: t };
   }
 
-  /* ---------- สลับท่าทางน้องส้ม ---------- */
+  /* ---------- สลับท่าทางน้องส้ม (ใช้ .png ก่อน .svg เป็นสำรอง) ---------- */
+  function setSprite(status) {
+    delete sprite.dataset.fb;
+    sprite.onerror = function () {
+      if (!sprite.dataset.fb) {                       // png ไม่มี → ลอง svg หนึ่งครั้ง
+        sprite.dataset.fb = '1';
+        sprite.src = 'sprites/' + status + '.svg';
+      } else {
+        sprite.onerror = null;                        // ไม่มีทั้งคู่ → หยุดวน
+      }
+    };
+    sprite.src = 'sprites/' + status + '.png';
+  }
+
   function setStatus(s) {
     if (s.status !== currentStatus) {
       currentStatus = s.status;
-      sprite.src = 'sprites/' + s.status + '.svg';   // เปลี่ยนภาพตามท่า
+      setSprite(s.status);                            // เปลี่ยนภาพตามท่า (png → svg)
       document.body.className = 'st-' + s.status;     // เปลี่ยนแอนิเมชัน/สีป้าย
       if (s.status === 'success') spawnBloom();       // ดอกไม้บานรอบตัว
       if (s.status === 'error') wiltPlants();         // ใบไม้เหี่ยวชั่วคราว
@@ -546,8 +561,12 @@
     getJSON('garden.json').then(renderGarden).catch(function () { /* ยังไม่มีไฟล์สวนก็ข้ามไป */ });
   }
 
-  // โหลดภาพทุกท่าไว้ล่วงหน้า เวลาสลับท่าจะไม่กระตุก
-  STATUSES.forEach(function (s) { var im = new Image(); im.src = 'sprites/' + s + '.svg'; });
+  // โหลดภาพทุกท่าไว้ล่วงหน้า เวลาสลับท่าจะไม่กระตุก (png ก่อน · svg เป็นสำรอง)
+  STATUSES.forEach(function (s) {
+    var im = new Image();
+    im.onerror = function () { im.onerror = null; im.src = 'sprites/' + s + '.svg'; };
+    im.src = 'sprites/' + s + '.png';
+  });
 
   tick();
   setInterval(tick, POLL_MS);

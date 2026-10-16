@@ -109,20 +109,22 @@ node set-status.js done "เสร็จแล้ว" feature
 
 ## 🎨 วิธีเปลี่ยนภาพน้องส้ม
 
-ภาพน้องส้มเป็น **SVG ล้วน** แยกไฟล์ตามท่าในโฟลเดอร์ `sprites/`
+ภาพน้องส้มเป็น **PNG โปร่งใสที่เจนจาก AI** แยกไฟล์ตามท่าในโฟลเดอร์ `sprites/`
+(ส่วนไฟล์ SVG ตัว-original ยังเก็บไว้เป็นสำรอง — หน้าเว็บจะโหลด `.png` ก่อน แล้วค่อยใช้ `.svg` ถ้าไม่พบ PNG)
 
 ```
-sprites/thinking.svg   sprites/coding.svg   sprites/success.svg
-sprites/error.svg      sprites/done.svg     sprites/idle.svg
+sprites/thinking.png   sprites/coding.png   sprites/success.png
+sprites/error.png      sprites/done.png     sprites/idle.png
+(+ sprites/*.svg  ไฟล์สำรอง)
 ```
 
 อยากใช้ภาพ AI ที่เจนเอง? แค่ **แทนที่ไฟล์ชื่อเดิม** ไม่ต้องแก้โค้ดอะไรเลย
 
 1. เจนภาพน้องส้มท่าทางต่าง ๆ ด้วย AI (เช่น แมวส้มตัวกลมอ้วน ตาโต แก้มป่อง โทนพาสเทล)
-2. บันทึกเป็น SVG/PNG **ชื่อไฟล์เดิม** เช่น `sprites/thinking.svg` (หรือแก้ชื่อไฟล์ใน `index.html` 6 จุด)
+2. ลบพื้นหลังให้โปร่งใส (กันขอบเหลือรอยขาว) แล้วบันทึกเป็น **ชื่อไฟล์เดิม** เช่น `sprites/thinking.png`
 3. รีเฟรชหน้าเว็บ — เสร็จ 🎉
 
-> แอนิเมชันเล็ก ๆ (หางส่าย, Zzz, น้ำหยด) อยู่ในไฟล์ SVG ตัว-original — ถ้าเปลี่ยนภาพใหม่
+> แอนิเมชันเล็ก ๆ (หางส่าย, Zzz, น้ำหยด) อยู่ในไฟล์ SVG ตัว-original — ถ้าใช้ภาพ PNG ใหม่
 > แอนิเมชันจะหายไป แต่ท่าทางระดับหน้าเว็บ (เดิน, เด้ง, นอน) ยังทำงานเหมือนเดิม
 
 ## 🗂 โครงสร้างไฟล์
@@ -133,7 +135,7 @@ status.json         ← เขียนสถานะที่นี่ (อ่
 garden.json         ← ส่วนตัวของสวน (งอกเองตอน done)
 set-status.js       ← คำสั่งเขียนสถานะจาก terminal
 demo.js             ← สคริปต์ทดสอบ สลับสถานะเองทุก 3 วินาที
-sprites/            ← ภาพน้องส้ม 6 ท่า (เปลี่ยนไฟล์ชื่อเดิมได้)
+sprites/            ← ภาพน้องส้ม 6 ท่า (png หลัก + svg สำรอง เปลี่ยนไฟล์ชื่อเดิมได้)
 examples/           ← ตัวอย่าง status.json / garden.json
 ```
 
@@ -256,17 +258,19 @@ No Node required — any tool that can write JSON (`echo`, Python, …) works.
 
 ## 🎨 Replacing the cat art
 
-Som is drawn as **pure SVG**, one file per pose in `sprites/`
+Som is **AI-generated PNG art with a transparent background**, one file per pose in `sprites/`
+(the original SVGs stay as fallback — the page loads `.png` first and falls back to `.svg` when a PNG is missing)
 
 ```
-sprites/thinking.svg   sprites/coding.svg   sprites/success.svg
-sprites/error.svg      sprites/done.svg     sprites/idle.svg
+sprites/thinking.png   sprites/coding.png   sprites/success.png
+sprites/error.png      sprites/done.png     sprites/idle.png
+(+ sprites/*.svg  fallback files)
 ```
 
-Using your own AI-generated art? Just **overwrite the same filenames** — no code changes:
+Using your own AI-generated art? Just **overwrite the same file names** — no code changes:
 
 1. Generate Som in each pose (chubby round orange cat, big eyes, puffy cheeks, pastel tones)
-2. Save as SVG/PNG with the **same file name** (or update the six names in `index.html`)
+2. Remove the background so it is transparent (no white edge halo), then save with the **same file name** (e.g. `sprites/thinking.png`)
 3. Refresh — done 🎉
 
 > Tiny built-in animations (tail sway, Zzz, water drops) live inside the original SVG files
