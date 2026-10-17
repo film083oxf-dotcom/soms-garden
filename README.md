@@ -150,6 +150,24 @@ node set-status.js done "เสร็จแล้ว" feature
 
 > ไม่ต้องใช้ Node ก็ได้ — เขียน `status.json` ด้วย `echo`, Python, หรืออะไรก็ตามที่เขียน JSON เป็น
 
+### 🤝 ให้เอเจนต์อัปเดตสถานะเองด้วย `AGENTS.md`
+
+repo นี้มีไฟล์ [`AGENTS.md`](AGENTS.md) ที่เขียนเป็นกติกาให้ AI coding agent อ่านแล้ว
+เรียก `set-status.js` เองตอนเปลี่ยนช่วงงาน — **ไม่ต้องมาเขียน hook เองทุกครั้ง**
+
+| เครื่องมือ | ต้องทำอะไร |
+|---|---|
+| Claude Code, Codex, Cursor, Gemini CLI, Copilot Workspace ฯลฯ ที่อ่าน `AGENTS.md` อัตโนมัติ | เปิด repo นี้แล้วทำงานได้เลย — เอเจนต์จะเห็นกติกาเอง |
+| เครื่องมือที่ไม่รู้จักไฟล์นี้ | เริ่มบทสนทนาด้วย: **“อ่าน `AGENTS.md` แล้วทำตาม”** |
+| เอเจนต์ที่รันใน sandbox อ่านไฟล์นอกโปรเจกต์ไม่ได้ | วาง `AGENTS.md` ไว้ที่ราก repo เดียวกัน (ไฟล์อยู่ในโปรเจกต์แล้ว) |
+
+กติกาหลักในไฟล์นั้น: `thinking` ตอนวางแผน → `coding` ตอนลงมือแก้ → `success` / `error` ตามผลเทสต์
+→ `done <fix\|feature\|docs>` ตอนจบงาน **ครั้งเดียว** ข้อความสั้น เป็นภาษาไทย
+และ **เรียกเฉพาะตอนเปลี่ยนช่วงงาน** ไม่ใช่ทุกคำสั่ง
+
+> 🧠 ถ้าเอเจนต์ของคุณยังไม่ทำตาม ลองถามกลับว่า “ตอนนี้นายทำอะไรอยู่ เขียนลง status.json ให้หน่อย”
+> แล้วมันจะเริ่มใช้คำสั่งเอง
+
 ## 📲 ติดตั้งเป็นแอปแยกหน้าต่าง
 
 เปิดหน้าเว็บครั้งเดียว แล้วกดปุ่ม **⬇ ติดตั้ง** ที่มุมขวาบน
@@ -369,6 +387,24 @@ node set-status.js done "done" feature
 | Your own scripts | Write `status.json` directly — see `examples/status.json` |
 
 No Node required — any tool that can write JSON (`echo`, Python, …) works.
+
+### 🤝 Let the agent drive it with `AGENTS.md`
+
+This repo ships [`AGENTS.md`](AGENTS.md) with instructions an AI coding agent reads and follows,
+calling `set-status.js` on its own as the work phase changes — no per-tool hook wiring needed.
+
+| Tool | What to do |
+|---|---|
+| Claude Code, Codex, Cursor, Gemini CLI, Copilot Workspace, … (read `AGENTS.md` automatically) | Just open this repo and work — the agent picks the rules up |
+| Tools that ignore that file | Start with: **“read AGENTS.md and follow it”** |
+| Agents sandboxed away from the project | `AGENTS.md` lives at the repo root, so it travels with the checkout |
+
+The rules are: `thinking` while planning → `coding` while editing → `success` / `error` for the
+build result → `done <fix\|feature\|docs>` once, when the whole task is done. Messages stay short and
+in Thai, and the status is only reported when the phase changes — not for every command.
+
+> 🧠 If your agent still ignores it, ask “what are you doing right now? write it to status.json”
+> and it will start using the commands.
 
 ## 📲 Install it as its own app
 
