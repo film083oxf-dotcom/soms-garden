@@ -199,18 +199,107 @@
   /* ใบเหี่ยวชั่วคราวตอนสถานะ error */
   .plants.wilt .plant { transform: translateX(-50%) rotate(13deg) scaleY(.86); filter: saturate(.55); }
 
+  /* ===== ตัวน้องส้ม: กรอบ + เงา + หายใจ ===== */
+  .pet {
+    position: relative;
+    z-index: 3;
+    width: 220px;
+    height: 200px;
+    max-width: 78%;
+    max-height: 46%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    animation: breathe 5.2s ease-in-out infinite;
+    transform-origin: 50% 100%;
+  }
+  .pet:focus-visible { outline: 2px solid #FFA94D; outline-offset: 4px; border-radius: 18px; }
+  /* เอียงหัวเล่น ๆ ตอนเอาเมาส์ไปชี้ (ใช้ `rotate` แยกจาก transform เพื่อไม่ทับอนิเมชันของท่า) */
+  .pet:hover #sprite { rotate: -1.6deg; }
+  .pet.petted { animation: squish .45s ease-out; }
+  /* ขยับจังหวะหายใจตามท่า: ทำงานอยู่ = ถี่ขึ้น · หลับ = ช้าลง */
+  body.st-coding .pet { animation-duration: 3.2s; }
+  body.st-idle   .pet { animation-duration: 6.6s; }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1, 1); }
+    50%      { transform: scale(1.015, .985); }
+  }
+  @keyframes squish {
+    0%   { transform: scale(1, 1); }
+    35%  { transform: scale(1.07, .91); }
+    70%  { transform: scale(.98, 1.03); }
+    100% { transform: scale(1, 1); }
+  }
+
+  .pet-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: 132px;
+    height: 18px;
+    margin-left: -66px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(90, 60, 30, .24), rgba(90, 60, 30, 0));
+    z-index: 1;
+  }
+  html[data-theme="night"] .pet-shadow {
+    background: radial-gradient(closest-side, rgba(0, 0, 0, .45), rgba(0, 0, 0, 0));
+  }
+  body.st-success .pet-shadow { animation: shadowHop 1.9s ease-in-out infinite; }
+  @keyframes shadowHop {
+    0%, 100% { transform: scale(1, 1); opacity: 1; }
+    12%      { transform: scale(.7, .78); opacity: .5; }
+    26%      { transform: scale(1.05, .95); opacity: 1; }
+  }
+
   /* น้องส้ม (โหลดจาก sprites/<สถานะ>.png · ถ้าไม่พบจะ fallback เป็น .svg) */
   #sprite {
     position: relative;
-    z-index: 3;
+    z-index: 2;
     display: block;
-    width: 220px;
-    height: 200px;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
-    max-width: 78%;
-    max-height: 46%;
     user-select: none;
     -webkit-user-drag: none;
+  }
+
+  /* เอฟเฟกต์เล็ก ๆ ตามท่า: น้ำหยด / น้ำตา / ประกาย / หัวใจ */
+  .fx { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .fx i { position: absolute; display: block; opacity: 0; font-style: normal; line-height: 1; }
+
+  .fx .drop {
+    width: 7px;
+    height: 9px;
+    border-radius: 50% 50% 55% 55%;
+    background: #7FD3F0;
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, .55);
+  }
+  body.st-coding .fx .drop { animation: drip 1.6s ease-in infinite; }
+  @keyframes drip {
+    0%   { opacity: 0; transform: translate(0, 0) scale(.5); }
+    18%  { opacity: 1; transform: translate(0, 4px) scale(1); }
+    75%  { opacity: .95; transform: translate(3px, 24px) scale(.9); }
+    100% { opacity: 0; transform: translate(5px, 32px) scale(.55); }
+  }
+
+  .fx .spark { font-size: 15px; color: #FFD873; text-shadow: 0 0 6px rgba(255, 216, 115, .85); }
+  body.st-success .fx .spark { animation: twinkle 2.4s ease-in-out infinite; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
+    40%      { opacity: 1; transform: scale(1.15) rotate(18deg); }
+    70%      { opacity: .2; transform: scale(.8) rotate(-8deg); }
+  }
+
+  .fx .heart { font-size: 14px; color: #FF8FA8; }
+  body.st-done .fx .heart,
+  .pet.petted .fx .heart { animation: floatUp 2.6s ease-out infinite; }
+  @keyframes floatUp {
+    0%   { opacity: 0; transform: translateY(6px) scale(.6); }
+    20%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-34px) scale(1.05); }
   }
 
   /* ดอกไม้บลาสต์รอบตัวตอน success */
@@ -228,7 +317,7 @@
   }
 
   /* ===== ท่าทางระดับหน้าเว็บ (ใช้ได้แม้เปลี่ยนภาพน้องส้ม) ===== */
-  #sprite { transition: opacity .2s; }
+  #sprite { transition: opacity .2s, rotate .35s ease; }
   body.st-thinking #sprite { animation: nod 3.4s ease-in-out infinite; }
   body.st-coding   #sprite { animation: waddle 1.1s ease-in-out infinite; }
   body.st-success  #sprite { animation: hop 1.9s ease-in-out infinite; }
@@ -285,8 +374,27 @@
   .stats .muted { color: var(--soft); font-weight: 400; }
   .hint { margin: 0; font-size: 11px; color: var(--soft); line-height: 1.5; }
 
+  /* ผู้ใช้ที่ตั้งค่า “ลดการเคลื่อนไหว” — ปิดอนิเมชันวนซ้ำ แต่ยังเห็นท่าและดอกไม้ */
+  @media (prefers-reduced-motion: reduce) {
+    #sprite { animation: none !important; }
+    .pet, .pet-shadow { animation: none !important; }
+    .fx i { animation: none !important; opacity: 0 !important; }
+    .bloom {
+      animation: none !important;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .plant, .plants, .bubble { transition: none !important; }
+  }
+
+  /* โฟกัสมองเห็นชัด (คีย์บอร์ด) */
+  .themes button:focus-visible,
+  #installBtn:focus-visible {
+    outline: 2px solid #FFA94D;
+    outline-offset: 2px;
+  }
+
   @media (max-height: 520px) {
-    #sprite { width: 170px; height: 155px; }
+    .pet { width: 170px; height: 155px; }
     .scene { padding-bottom: 48px; }
     .ground { height: 76px; }
   }
@@ -299,18 +407,23 @@
     <span class="brand">🍊 Som's Garden</span>
     <button id="installBtn" type="button" title="ติดตั้งเป็นแอปแยกหน้าต่าง">⬇ ติดตั้ง</button>
     <nav class="themes">
-      <button data-set-theme="transparent">โปร่งใส</button>
-      <button data-set-theme="pastel">พาสเทล</button>
-      <button data-set-theme="night">กลางคืน</button>
+      <button type="button" data-set-theme="transparent" aria-pressed="false">โปร่งใส</button>
+      <button type="button" data-set-theme="pastel" aria-pressed="true">พาสเทล</button>
+      <button type="button" data-set-theme="night" aria-pressed="false">กลางคืน</button>
     </nav>
   </header>
 
   <section class="scene">
-    <div class="bubble"><span id="bubbleText">กำลังตื่นอยู่...</span></div>
+    <div class="bubble" role="status" aria-live="polite"><span id="bubbleText">กำลังตื่นอยู่...</span></div>
     <div class="bloom-layer" id="bloomLayer"></div>
-    <!-- น้องส้ม: โหลดท่าทางจาก sprites/<สถานะ>.png (ถ้าไม่พบ ระบบจะ fallback เป็น .svg ให้เอง) -->
-    <img id="sprite" src="sprites/idle.png" alt="น้องส้ม แมวส้มอ้วนประจำสวน" width="220" height="200" draggable="false"
-         onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='sprites/idle.svg';}">
+    <!-- น้องส้ม: ห่อด้วย .pet เพื่อให้มีเงา เอฟเฟกต์ และกดลูบหัวได้
+         รูปโหลดจาก sprites/<สถานะ>.png (ถ้าไม่พบ ระบบจะ fallback เป็น .svg ให้เอง) -->
+    <div class="pet" id="pet" role="button" tabindex="0" aria-label="ลูบหัวน้องส้ม" title="กดเพื่อลูบหัวน้องส้ม 🐾">
+      <div class="pet-shadow" aria-hidden="true"></div>
+      <div class="fx" id="fx" aria-hidden="true"></div>
+      <img id="sprite" src="sprites/idle.png" alt="น้องส้ม แมวส้มอ้วนประจำสวน" width="220" height="200" draggable="false"
+           onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='sprites/idle.svg';}">
+    </div>
     <div class="ground">
       <div class="plants" id="plants"></div>
     </div>
@@ -326,7 +439,7 @@
       <span id="streak">🔥 สตรีค 0 วัน</span>
       <span class="muted" id="leafState"></span>
     </div>
-    <p class="hint" id="hint">อ่าน status.json ทุก 1 วินาที · ไม่อัปเดตเกิน 2 นาที = น้องส้มหลับเอง</p>
+    <p class="hint" id="hint">อ่าน status.json ทุก 1 วิ · เงียบ 10 นาที = หลับ (ตั้ง ttlMinutes ได้)</p>
   </footer>
 </main>
 
@@ -339,8 +452,9 @@
 (function () {
   'use strict';
 
-  var POLL_MS   = 1000;              // ความถี่ในการอ่านไฟล์ (มิลลิวินาที)
-  var IDLE_MS   = 2 * 60 * 1000;     // ไม่อัปเดตเกิน 2 นาที → หลับเอง
+  var POLL_MS   = 1000;                    // ความถี่ในการอ่านไฟล์ (มิลลิวินาที)
+  var IDLE_MS   = 10 * 60 * 1000;          // ค่าเริ่มต้น: เงียบเกิน 10 นาที → หลับเอง
+  var TTL_MIN   = 1, TTL_MAX = 24 * 60;    // ขอบเขตของ ttlMinutes ที่ยอมรับ (1 นาที – 24 ชั่วโมง)
   var STATUSES  = ['thinking', 'coding', 'success', 'error', 'done', 'idle'];
 
   // คำพูดเริ่มต้นของแต่ละท่า (ภาษาไทย)
@@ -364,13 +478,18 @@
   var bloomLayer = $('bloomLayer');
 
   var currentStatus = null;   // สถานะที่แสดงอยู่ตอนนี้
-  var lastPlantN = -1, lastStreak = -99, lastYellow = -99;
+  var lastGardenSig = '', lastStreak = -99, lastYellow = -99;
   var wiltTimer = null, bloomTimer = null;
+  var lastLine = '', pettingUntil = 0, petTimer = null;   // lastLine = คำพูดล่าสุดจาก status.json
 
   /* ---------- ธีม (จำค่าไว้ใน localStorage) ---------- */
   var themeBtns = Array.prototype.slice.call(document.querySelectorAll('[data-set-theme]'));
   function markTheme(t) {
-    themeBtns.forEach(function (b) { b.classList.toggle('on', b.dataset.setTheme === t); });
+    themeBtns.forEach(function (b) {
+      var on = b.dataset.setTheme === t;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');   // บอก screen reader ว่าธีมไหนถูกเลือก
+    });
   }
   var savedTheme = localStorage.getItem('som-garden-theme');
   if (savedTheme) document.documentElement.dataset.theme = savedTheme;
@@ -392,10 +511,17 @@
   }
 
   /* ---------- ตัดสินสถานะที่จะแสดงจริง ---------- */
+  // เวลาหลับ = ttlMinutes ใน status.json (ถ้ามี) ไม่งั้นใช้ค่าเริ่มต้น 10 นาที
+  function idleAfterMs(raw) {
+    var m = Number(raw && raw.ttlMinutes);
+    if (!isFinite(m) || m <= 0) return IDLE_MS;
+    return Math.min(Math.max(m, TTL_MIN), TTL_MAX) * 60000;
+  }
+
   function effective(raw) {
     var t = Date.parse(raw.updatedAt || '');
-    var stale = !t || (Date.now() - t) > IDLE_MS;   // เกิน 2 นาที = หลับเอง
-    if (stale) return { status: 'idle', line: 'เงียบจัง... ขอหลับก่อน Zzz 😴', stale: true, updatedAt: t };
+    var stale = !isFinite(t) || (Date.now() - t) > idleAfterMs(raw);   // เงียบเกินเวลาที่ตั้ง = หลับเอง
+    if (stale) return { status: 'idle', line: 'เงียบจัง... ขอหลับก่อน Zzz 😴', stale: true, updatedAt: isFinite(t) ? t : 0 };
     var status = STATUSES.indexOf(raw.status) >= 0 ? raw.status : 'idle';
     var msg = (raw.message || '').trim();
     return { status: status, line: msg || LINES[status], stale: false, updatedAt: t };
@@ -424,15 +550,21 @@
       if (s.status === 'error') wiltPlants();         // ใบไม้เหี่ยวชั่วคราว
       if (s.status !== 'error') clearWilt();
     }
-    bubbleText.textContent = s.line;
+    lastLine = s.line;
+    if (Date.now() >= pettingUntil) bubbleText.textContent = s.line;   // อย่าทับคำพูดตอนกำลังลูบหัว
     statusPill.textContent = LABELS[s.status];
     freshness.textContent = s.updatedAt ? agoText(s.updatedAt) : 'ยังไม่มีการอัปเดต';
   }
 
   function agoText(ts) {
+    if (!ts) return 'ยังไม่มีการอัปเดต';
     var sec = Math.max(0, Math.round((Date.now() - ts) / 1000));
     if (sec < 60) return 'อัปเดตเมื่อ ' + sec + ' วินาทีที่แล้ว';
-    return 'อัปเดตเมื่อ ' + Math.round(sec / 60) + ' นาทีที่แล้ว';
+    var min = Math.round(sec / 60);
+    if (min < 60) return 'อัปเดตเมื่อ ' + min + ' นาทีที่แล้ว';
+    var hr = Math.round(min / 60);
+    if (hr < 24) return 'อัปเดตเมื่อ ' + hr + ' ชั่วโมงที่แล้ว';
+    return 'อัปเดตเมื่อ ' + Math.round(hr / 24) + ' วันที่แล้ว';   // ไม่ปล่อยเป็น “2316 นาที”
   }
 
   /* ---------- ดอกไม้บานตอนสำเร็จ ---------- */
@@ -462,6 +594,52 @@
       '<circle cx="15" cy="14.5" r="4.5" fill="#FFE27A"/></svg>';
   }
 
+  /* ---------- เอฟเฟกต์จิ๋วรอบตัว (น้ำหยด / น้ำตา / ประกาย / หัวใจ) ---------- */
+  var fxLayer = $('fx'), pet = $('pet');
+
+  function addFx(cls, left, top, delay, char) {
+    var el = document.createElement('i');
+    el.className = cls;
+    el.style.left = left + '%';
+    el.style.top = top + '%';
+    el.style.animationDelay = delay + 's';
+    if (char) el.textContent = char;
+    fxLayer.appendChild(el);
+  }
+
+  // น้ำหยดจากบัวรดน้ำ (coding) · ประกายรอบหัว (success) · หัวใจ (done / ตอนลูบหัว)
+  // (ท่า error มีน้ำตาในภาพอยู่แล้ว จึงไม่ซ้อนน้ำตาเพิ่ม)
+  [[45, 60, 0], [50, 58, .55]].forEach(function (p) { addFx('drop', p[0], p[1], p[2]); });
+  [[20, 22, 0], [78, 18, .35], [86, 42, .7], [16, 46, 1.05]].forEach(function (p) { addFx('spark', p[0], p[1], p[2], '✦'); });
+  [[26, 34, 0], [73, 38, .9]].forEach(function (p) { addFx('heart', p[0], p[1], p[2], '♥'); });
+
+  /* ---------- กดลูบหัวน้องส้ม ---------- */
+  var PET_LINES = [
+    'งื้อ~ ชอบตรงนี้ 🐾',
+    'ฟู่~ ดีจังเลย 🍊',
+    'กอดอีกก็ได้นะ 💛',
+    'ขออ้อนแป๊บนะ 😽'
+  ];
+
+  function petOnce() {
+    if (Date.now() < pettingUntil) return;          // กันกระหน่ำกด
+    pettingUntil = Date.now() + 2200;
+    pet.classList.add('petted');
+    bubbleText.textContent = PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
+
+    clearTimeout(petTimer);
+    petTimer = setTimeout(function () {
+      pet.classList.remove('petted');
+      pettingUntil = 0;
+      if (lastLine) bubbleText.textContent = lastLine;   // คืนคำพูดของสถานะจริง
+    }, 2200);
+  }
+
+  pet.addEventListener('click', petOnce);
+  pet.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); petOnce(); }
+  });
+
   function wiltPlants() {
     plantsBox.classList.add('wilt');
     clearTimeout(wiltTimer);
@@ -475,13 +653,18 @@
   /* ---------- วาดสวนจาก garden.json ---------- */
   var KIND_OF = { fix: 'flower', feature: 'tree', docs: 'bush' };  // ชนิดงาน → ชนิดต้นไม้
   var KIND_Z  = { tree: 1, bush: 2, flower: 3 };                    // ต้นใหญ่อยู่หลัง
+  var KIND_TH = { flower: 'ดอกไม้', tree: 'ต้นไม้ใหญ่', bush: 'พุ่มไม้' };
 
   function renderGarden(g) {
     var plants = Array.isArray(g.plants) ? g.plants : [];
 
-    // วาดใหม่เฉพาะเมื่อจำนวนต้นไม้เปลี่ยน
-    if (plants.length !== lastPlantN) {
-      lastPlantN = plants.length;
+    // วาดใหม่เมื่อ “รายการต้นไม้เปลี่ยน” (จำนวน หรือ ชนิด/วันที่) ไม่ใช่แค่จำนวน
+    var sig = plants.map(function (p) {
+      return (p.kind || KIND_OF[p.type] || 'flower') + '@' + (p.date || '');
+    }).join('|');
+
+    if (sig !== lastGardenSig) {
+      lastGardenSig = sig;
       plantsBox.innerHTML = '';
       plants.forEach(function (p, i) { plantsBox.appendChild(makePlant(p, i)); });
       plantCount.textContent = '🌳 ต้นไม้ ' + plants.length;
@@ -509,17 +692,27 @@
     }
   }
 
+  // อ่านวันที่ได้ทั้ง "2026-10-17" และ ISO เต็ม "2026-10-17T09:12:30.000Z"
+  function parseDay(value) {
+    if (!value || typeof value !== 'string') return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return null;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
   function daysAgo(dateStr) {
+    var d = parseDay(dateStr);
+    if (!d) return null;                       // วันที่เพี้ยน → ไม่เดา ไม่ขึ้น "ขาด NaN วัน"
     var now = new Date();
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var d = new Date(dateStr + 'T00:00:00');
     return Math.round((today - d) / 86400000);
   }
   // 0 = เขียวชอุ่ม, 1 = เริ่มเหลือง (ขาด 1 วัน), 2 = เหลืองจัด (ขาดหลายวัน)
   function yellowLevel(dateStr) {
-    if (!dateStr) return 0;
     var gap = daysAgo(dateStr);
-    if (gap <= 1) return 0;
+    if (gap === null || gap <= 1) return 0;
     return gap === 2 ? 1 : 2;
   }
 
@@ -534,6 +727,7 @@
     el.style.bottom = ((i % 4) * 3) + 'px';
     el.style.zIndex = KIND_Z[kind] || 3;
     el.innerHTML = plantSVG(kind, scale, i);
+    el.title = (KIND_TH[kind] || 'ต้นไม้') + (p.date ? ' · ปลูกเมื่อ ' + p.date : '');   // ชี้แล้วเห็นวันที่ปลูก
     return el;
   }
 
@@ -576,7 +770,7 @@
       : '⚠️ ยังไม่เจอ status.json — ลองรัน: node set-status.js coding "กำลังทำของดี"';
   }
   function hideHint() {
-    hint.textContent = 'อ่าน status.json ทุก 1 วินาที · ไม่อัปเดตเกิน 2 นาที = น้องส้มหลับเอง';
+    hint.textContent = 'อ่าน status.json ทุก 1 วิ · เงียบ 10 นาที = หลับ (ตั้ง ttlMinutes ได้)';
   }
 
   /* ---------- วนอ่านไฟล์ทุก 1 วินาที ---------- */

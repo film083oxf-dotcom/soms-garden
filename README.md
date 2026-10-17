@@ -44,7 +44,8 @@ node demo.js 1      # รันแค่ 1 รอบให้เห็นคร�
 
 ## 😸 ตารางสถานะ
 
-เขียนลง `status.json` — ทุกค่ามี `updatedAt` เป็นเวลา ISO (ถ้าไม่อัปเดตเกิน **2 นาที** น้องส้มจะหลับเอง)
+เขียนลง `status.json` — ทุกค่ามี `updatedAt` เป็นเวลา ISO (ถ้าไม่อัปเดตเกิน **10 นาที** น้องส้มจะหลับเอง
+และปรับเวลาได้ด้วย `ttlMinutes` ถ้างานของคุณใช้เวลานานกว่านั้น)
 
 | ค่าใน `status.json` | ท่าทางของน้องส้ม | คำพูดเริ่มต้น |
 |---|---|---|
@@ -61,8 +62,15 @@ node demo.js 1      # รันแค่ 1 รอบให้เห็นคร�
 {
   "status": "coding",
   "message": "กำลังเขียนหน้าล็อกอิน",   // ภาษาไทย สั้น ๆ แสดงบนฟองเหนือหัว (ว่าง = ใช้คำพูดเริ่มต้น)
-  "updatedAt": "2026-10-15T09:12:30.000Z"
+  "updatedAt": "2026-10-15T09:12:30.000Z",
+  "ttlMinutes": 30                    // ไม่บังคับ: เงียบเกินกี่นาทีถือว่าหลับ (1–1440, ค่าเริ่มต้น 10)
 }
+```
+
+อยากให้เข้างานยาว ๆ ไม่หลับกลางคัน ก็สั่งด้วย `--ttl` ได้เลย
+
+```bash
+node set-status.js coding "รันเทสต์ทั้งโปรเจกต์" --ttl=45
 ```
 
 ## 🌳 สวนของน้องส้ม (`garden.json`)
@@ -83,6 +91,22 @@ node set-status.js done "อัปเดตเอกสาร" docs
 
 หน้าเว็บจะวาดสวนจาก `garden.json` แสดงจำนวนต้นไม้รวม และ **สตรีครายวัน 🔥**
 ถ้าขาดไป 1 วันไม่มีงาน `done` เลย ใบไม้ทุกต้นจะเริ่มเหลือง (พอทำเสร็จอีกครั้งก็กลับมาเขียว)
+
+## 🎬 ขยับได้ + ลูกเล่น
+
+ภาพน้องส้มเป็น PNG นิ่ง ๆ แต่หน้าเว็บเติมชีวิตให้ด้วย CSS ล้วน — ไม่ต้องแก้รูปเลย
+
+- **หายใจ** — ตัวยืด/หดเบา ๆ ตลอดเวลา (ท่า `coding` = ถี่ขึ้น · ท่า `idle` = ช้าลง)
+- **เงาใต้ตัว** — หด/ขยายตามจังหวะตอนกระโดดดีใจ
+- **เอียงหัว** — เอาเมาส์ไปชี้ที่ตัวน้องส้ม
+- **เอฟเฟกต์ตามท่า** — น้ำหยดจากบัวรดน้ำ (`coding`) · ประกายรอบหัว (`success`) · หัวใจลอย (`done`)
+- **ลูบหัว** — คลิกที่ตัวน้องส้ม (หรือ `Tab` ไปที่ตัวแล้วกด `Enter` / `Space`)
+  → ตัวย่นนิด ๆ, หัวใจลอยขึ้น, แล้วพูดคำอ้อน ๆ 2 วินาที จากนั้นกลับไปพูดตามสถานะจริง
+- **ชี้ที่ต้นไม้ในสวน** — เห็นชื่อต้นไม้และวันที่ปลูก
+- เคารพ `prefers-reduced-motion` — ผู้ใช้ที่ตั้งให้ลดการเคลื่อนไหวจะเห็นทุกอย่างนิ่ง (ไม่มีอนิเมชันวน)
+
+> อยากได้ “กะพริบตา” จริง ๆ ต้องแยกชั้นดวงตาเป็นอีกรูป (ภาพชุดนี้วาดตาติดกับหน้า)
+> — แจ้งได้เลยถ้าอยากได้สไปรท์แบบแยกชั้นสำหรับกะพริบตา
 
 ## 🤖 วิธีเชื่อมกับเอเจนต์ตัวอื่น
 
@@ -140,8 +164,9 @@ sprites/error.png      sprites/done.png     sprites/idle.png
 2. ลบพื้นหลังให้โปร่งใส (กันขอบเหลือรอยขาว) แล้วบันทึกเป็น **ชื่อไฟล์เดิม** เช่น `sprites/thinking.png`
 3. รีเฟรชหน้าเว็บ — เสร็จ 🎉
 
-> แอนิเมชันเล็ก ๆ (หางส่าย, Zzz, น้ำหยด) อยู่ในไฟล์ SVG ตัว-original — ถ้าใช้ภาพ PNG ใหม่
-> แอนิเมชันจะหายไป แต่ท่าทางระดับหน้าเว็บ (เดิน, เด้ง, นอน) ยังทำงานเหมือนเดิม
+> แอนิเมชันที่ฝังในไฟล์ SVG ตัว-original (หางส่าย, Zzz) จะหายไปเมื่อใช้ภาพ PNG
+> แต่แอนิเมชันระดับหน้าเว็บทั้งหมด (หายใจ, เงา, เดิน, เด้ง, นอน, น้ำหยด, ประกาย, หัวใจ, ลูบหัว)
+> ยังทำงานเหมือนเดิม เพราะวาดด้วย CSS ทับรูปทุกท่า
 
 ## 🗂 โครงสร้างไฟล์
 
@@ -211,7 +236,8 @@ node demo.js 1      # one single loop through all six poses
 ## 😸 Status table
 
 Write into `status.json`. Each entry carries an ISO `updatedAt`;
-if nothing updates for **2 minutes**, Som falls asleep on their own.
+if nothing updates for **10 minutes**, Som falls asleep on their own — tune that window with `ttlMinutes`
+if your tasks run longer.
 
 | `status` value | What Som does | Default line |
 |---|---|---|
@@ -233,6 +259,20 @@ File format:
 ```
 
 `message` (optional, short, shown in the speech bubble) falls back to the default line when empty.
+`ttlMinutes` (optional, 1–1440, default 10) is how long Som waits before dozing off.
+
+```json
+{
+  "status": "coding",
+  "message": "running the long test suite",
+  "updatedAt": "2026-10-15T09:12:30.000Z",
+  "ttlMinutes": 45
+}
+```
+
+```bash
+node set-status.js coding "running the full suite" --ttl=45
+```
 
 ## 🌳 The garden (`garden.json`)
 
@@ -253,6 +293,22 @@ node set-status.js done "updated the docs" docs
 The page renders the garden from `garden.json`, shows the total plant count and the
 **daily streak 🔥**. Skip a day with no `done` and every leaf starts turning yellow;
 finish something again and the garden turns green.
+
+## 🎬 Motion & interactions
+
+Som's art is static PNG, but the page adds life with pure CSS — no art edits needed.
+
+- **Breathing** — the body gently stretches (faster while `coding`, slower while `idle`)
+- **Ground shadow** — squashes and stretches with the victory hop
+- **Head tilt** — hover the cat
+- **Per-pose effects** — water drops from the can (`coding`), sparkles (`success`), floating hearts (`done`)
+- **Petting** — click the cat (or `Tab` to it and press `Enter` / `Space`): it squishes, hearts float up,
+  and it says something affectionate for two seconds before returning to the real status line
+- **Hover a garden plant** — see its name and planting date
+- Respects `prefers-reduced-motion`: everything goes still for users who ask for less motion
+
+> Real **eye blinking** would need the eyes on a separate art layer (this art set draws the eyes into the
+> face) — happy to produce a layered sprite set if you want it.
 
 ## 🤖 Connecting other agents
 
@@ -309,8 +365,9 @@ Using your own AI-generated art? Just **overwrite the same file names** — no c
 2. Remove the background so it is transparent (no white edge halo), then save with the **same file name** (e.g. `sprites/thinking.png`)
 3. Refresh — done 🎉
 
-> Tiny built-in animations (tail sway, Zzz, water drops) live inside the original SVG files
-> and disappear with a replacement, but the page-level motion (waddle, hop, calm breathing) still works.
+> Animations baked into the original SVG files (tail sway, Zzz) disappear with a replacement, but every
+> page-level motion (breathing, shadow, waddle, hop, water drops, sparkles, hearts, petting) is drawn in CSS
+> on top of whichever art you use, so it keeps working.
 
 ## 📄 License
 

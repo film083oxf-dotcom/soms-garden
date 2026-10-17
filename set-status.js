@@ -8,10 +8,11 @@
  *   node set-status.js done "เสร็จแล้ว" fix        ← fix = ปลูกดอกไม้
  *   node set-status.js done "เพิ่มฟีเจอร์ใหม่" feature  ← feature = ต้นไม้ใหญ่
  *   node set-status.js done "อัปเดตเอกสาร" docs    ← docs = พุ่มไม้
+ *   node set-status.js coding "รันเทสต์ยาว" --ttl=45   ← 45 นาทีค่อยหลับ
  *
  * สถานะที่รองรับ: thinking / coding / success / error / done / idle
  * - ทุกครั้งที่เป็น done จะเพิ่มต้นไม้ 1 ต้นลง garden.json พร้อมวันที่
- * - ถ้าไม่อัปเดตเกิน 2 นาที หน้าเว็บจะสลับเป็น idle ให้เอง
+ * - ถ้าไม่อัปเดตเกิน ttlMinutes (ค่าเริ่มต้น 10 นาที) หน้าเว็บจะสลับเป็น idle ให้เอง
  */
 
 const fs = require('node:fs');
@@ -25,14 +26,16 @@ const STATUS_FILE = path.join(ROOT, 'status.json');
 const GARDEN_FILE = path.join(ROOT, 'garden.json');
 
 const USAGE = `
-วิธีใช้: node set-status.js <สถานะ> [ข้อความ] [ชนิดงาน]
+วิธีใช้: node set-status.js <สถานะ> [ข้อความ] [ชนิดงาน] [--ttl=<นาที>]
 
   สถานะ:   ${STATUSES.join(' / ')}
   ชนิดงาน: fix (ดอกไม้) / feature (ต้นไม้ใหญ่) / docs (พุ่มไม้)  ← ใช้ตอนสถานะ done
+  --ttl:   เงียบเกินกี่นาทีให้ถือว่าหลับ (1–1440, ค่าเริ่มต้น 10)
 
 ตัวอย่าง:
   node set-status.js thinking "อืม ขอดูโครงสร้างก่อน"
   node set-status.js coding "กำลังเขียนหน้าล็อกอิน"
+  node set-status.js coding "รันเทสต์ชุดใหญ่" --ttl=45
   node set-status.js done "เสร็จแล้ว" feature
 `;
 
@@ -60,7 +63,25 @@ function localDate(d = new Date()) {
  * @param {string} status  สถานะจาก STATUSES
  * @param {string} message คำพูดบนฟองเหนือหัว (ภาษาไทย สั้น ๆ)
  * @param {string} [taskType] ชนิดงานตอน done: fix | feature | docs
+/**
+ * แปลงค่า ttlMinutes ที่รับมาให้อยู่ในช่วง 1–1440 นาที
+ * @returns {number|null} null = ไม่ได้ระบุ/ไม่ถูกต้อง (ใช้ค่าเริ่มต้นของหน้าเว็บ)
+ */
+function normalizeTTL(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.min(Math.max(Math.round(n), 1), 24 * 60);
+}
+
+/**
+ * อัปเดตสถานะน้องส้ม
+ * @param {string} status  สถานะจาก STATUSES
+ * @param {string} message คำพูดบนฟองเหนือหัว (ภาษาไทย สั้น ๆ)
+ * @param {string} [taskType] ชนิดงานตอน done: fix | feature | docs
  * @param {object} [opts]  { plant: false } = ไม่เพิ่มต้นไม้แม้เป็น done (ใช้ตอน demo)
+ *                         { ttlMinutes } = เงียบกี่นาทีถือว่าหลับ
+ *                         { statusFile, gardenFile } = เปลี่ยนที่เขียนไฟล์ (ใช้ในเทสต์)
  * @returns {object|null} ต้นไม้ที่ถูกเพิ่ม (ถ้ามี)
  */
 function setStatus(status, message = '', taskType, opts = {}) {
@@ -68,13 +89,19 @@ function setStatus(status, message = '', taskType, opts = {}) {
     throw new Error(`สถานะไม่ถูกต้อง: "${status}" (ใช้ได้: ${STATUSES.join(', ')})`);
   }
 
+  const statusFile = opts.statusFile || STATUS_FILE;
+  const gardenFile = opts.gardenFile || GARDEN_FILE;
+
   // 1) เขียนสถานะลง status.json (หน้าเว็บจะอ่านทุก 1 วินาที)
   const now = new Date();
-  writeJSON(STATUS_FILE, {
+  const record = {
     status,
     message: String(message).trim(),
     updatedAt: now.toISOString(),
-  });
+  };
+  const ttlMinutes = normalizeTTL(opts.ttlMinutes);
+  if (ttlMinutes) record.ttlMinutes = ttlMinutes;
+  writeJSON(statusFile, record);
 
   // 2) ถ้าเสร็จงาน → เพิ่มต้นไม้ 1 ต้น + อัปเดตสตรีค
   if (status !== 'done' || opts.plant === false) return null;
@@ -85,7 +112,7 @@ function setStatus(status, message = '', taskType, opts = {}) {
     type = 'feature';
   }
 
-  const garden = readJSON(GARDEN_FILE, { plants: [], streak: 0, lastDone: null });
+  const garden = readJSON(gardenFile, { plants: [], streak: 0, lastDone: null });
   if (!Array.isArray(garden.plants)) garden.plants = [];
 
   const today = localDate(now);
@@ -103,17 +130,28 @@ function setStatus(status, message = '', taskType, opts = {}) {
   }
   garden.lastDone = today;
 
-  writeJSON(GARDEN_FILE, garden);
+  writeJSON(gardenFile, garden);
   return garden.plants[garden.plants.length - 1];
 }
 
-module.exports = { setStatus, STATUSES, KIND_OF, KIND_TH, localDate, readJSON };
+module.exports = {
+  setStatus, normalizeTTL, STATUSES, KIND_OF, KIND_TH, localDate, readJSON, writeJSON,
+};
 
 /* =========================================================
    รันตรง ๆ จากคำสั่ง: node set-status.js coding "..."
    ========================================================= */
 if (require.main === module) {
-  const [status, message = '', taskType] = process.argv.slice(2);
+  const rawArgs = process.argv.slice(2);
+  const argv = [];
+  let ttlRaw = null;
+  for (let i = 0; i < rawArgs.length; i++) {
+    const a = rawArgs[i];
+    if (a === '--ttl') ttlRaw = rawArgs[++i];
+    else if (a.startsWith('--ttl=')) ttlRaw = a.slice('--ttl='.length);
+    else argv.push(a);
+  }
+  const [status, message = '', taskType] = argv;
 
   if (!status || status === 'help' || status === '--help') {
     console.log(USAGE.trim());
@@ -121,8 +159,11 @@ if (require.main === module) {
   }
 
   try {
-    const planted = setStatus(status, message, taskType);
+    const planted = setStatus(status, message, taskType, { ttlMinutes: ttlRaw });
     console.log(`✅ เขียน status.json → ${status}${message ? ` : "${message}"` : ''}`);
+    const ttl = normalizeTTL(ttlRaw);
+    if (ttl) console.log(`⌛ เงียบเกิน ${ttl} นาที = น้องส้มจะหลับเอง`);
+    else if (ttlRaw !== null) console.warn(`⚠️  --ttl "${ttlRaw}" ใช้ไม่ได้ (ต้องเป็น 1–1440 นาที) — ใช้ค่าเริ่มต้น 10 นาที`);
     if (planted) {
       const total = readJSON(GARDEN_FILE, { plants: [] }).plants.length;
       console.log(`🌱 เพิ่ม${KIND_TH[planted.kind]}ลงสวนแล้ว (วันนี้ ${planted.date}) — รวม ${total} ต้น`);
