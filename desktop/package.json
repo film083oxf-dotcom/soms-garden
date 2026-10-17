@@ -1,0 +1,14 @@
+{
+  "name": "soms-garden-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "น้องส้ม desktop pet — อ่าน status.json แล้วเดินไปมาตามขอบจอ (Electron · Windows)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "electron": "^44.9.0"
+  }
+}

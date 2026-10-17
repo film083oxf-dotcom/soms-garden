@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>น้องส้ม · desktop pet</title>
+<!-- จำกัดแหล่งที่มาตามที่ Electron แนะนำ: โหลดเฉพาะไฟล์ในโปรเจกต์ -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file:; connect-src 'none'">
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;              /* หน้าต่างโปร่งใส */
+    font-family: "Noto Sans Thai", "Leelawadee UI", "Th Sarabun New", system-ui, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* .rig = คู่ฟองคำพูด + ตัวน้องส้ม — เลื่อนแนวนอนไปด้วยกันตอนเดิน */
+  #rig {
+    position: absolute;
+    left: 0;
+    bottom: 8px;
+    width: 170px;
+    height: 150px;
+    pointer-events: none;                 /* เฉพาะตัวน้องกับฟองเท่านั้นที่รับคลิก */
+  }
+  #pet {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 170px;
+    height: 150px;
+    cursor: pointer;
+    pointer-events: auto;
+    transform-origin: 50% 100%;           /* พลิกซ้าย-ขวาโดยไม่ให้ลอย */
+  }
+  #sprite {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    -webkit-user-drag: none;
+    transform-origin: 50% 100%;
+  }
+
+  /* เดิน: ตัวเด้ง + เอียงตามจังหวะก้าว — ทำด้วย CSS ล้วน ไม่มีสไปรต์เฟรมใหม่ */
+  #rig.walking #sprite { animation: waddle .6s ease-in-out infinite; }
+  @keyframes waddle {
+    0%, 100% { transform: rotate(-3deg) translateY(0); }
+    50%      { transform: rotate(3deg) translateY(-6px); }
+  }
+
+  /* success: กระโดดหนึ่งครั้ง (เล่นรอบเดียว) */
+  #rig.hop #sprite { animation: hop .8s ease-out 1; }
+  @keyframes hop {
+    0%   { transform: translateY(0) scale(1, 1); }
+    22%  { transform: translateY(-40px) scale(.96, 1.05); }
+    46%  { transform: translateY(0) scale(1.08, .92); }
+    62%  { transform: translateY(-8px) scale(1, 1); }
+    100% { transform: translateY(0) scale(1, 1); }
+  }
+
+  /* ฟองคำพูดลอยเหนือหัว — เลื่อนตามตัวน้อง แต่ไม่พลิกตอนเดินกลับด้าน */
+  #bubble {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 260px;
+    min-width: 44px;
+    padding: 7px 11px;
+    border-radius: 13px;
+    background: #FFFFFF;
+    color: #5B4636;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+    white-space: pre-wrap;
+    box-shadow: 0 4px 14px rgba(90, 60, 30, .18);
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity .2s ease;
+  }
+  #bubble.show { opacity: 1; }
+  #bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    margin-left: -7px;
+    border: 7px solid transparent;
+    border-top-color: #FFFFFF;
+    border-bottom: 0;
+  }
+
+  /* เคารพ prefers-reduced-motion — หยุดทุกอนิเมชัน น้องส้มยืนนิ่ง (ไม่เดิน) */
+  @media (prefers-reduced-motion: reduce) {
+    #sprite { animation: none !important; }
+    #bubble { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="rig">
+    <div id="bubble" role="status" aria-live="polite"><span id="bubbleText"></span></div>
+    <div id="pet" title="คลิก = ไปหน้าต่างเอเจนต์ · คลิกขวา = เมนู">
+      <img id="sprite" src="../../sprites/idle.png" alt="น้องส้ม แมวส้มอ้วน" draggable="false">
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
