@@ -144,7 +144,7 @@ node set-status.js done "เสร็จแล้ว" feature
 | เอเจนต์ / ระบบ | วิธีต่อ |
 |---|---|
 | Claude Code | ตั้ง **hooks** (`PreToolUse` → `thinking`, `PostToolUse` → `done`) ให้รันคำสั่งด้านบน |
-| Codex / Aider / OpenHands / Cursor | ใส่บรรทัดเดียวกันนี้ใน **system prompt** หรือ **hooks/pre-commit** ของเครื่องมือ |
+| เครื่องมือที่ไม่ได้อ่าน `AGENTS.md` เอง | ใส่คำสั่งเดียวกันนี้ใน **system prompt** หรือ **hooks / pre-commit** ของเครื่องมือ |
 | GitHub Actions | รัน `node set-status.js coding "${{ github.job }}"` ในแต่ละ step ของ workflow |
 | สคริปต์ของคุณเอง | เขียน `status.json` ตรง ๆ ก็ได้ ดูรูปแบบได้จาก `examples/status.json` |
 
@@ -155,11 +155,17 @@ node set-status.js done "เสร็จแล้ว" feature
 repo นี้มีไฟล์ [`AGENTS.md`](AGENTS.md) ที่เขียนเป็นกติกาให้ AI coding agent อ่านแล้ว
 เรียก `set-status.js` เองตอนเปลี่ยนช่วงงาน — **ไม่ต้องมาเขียน hook เองทุกครั้ง**
 
-| เครื่องมือ | ต้องทำอะไร |
-|---|---|
-| Claude Code, Codex, Cursor, Gemini CLI, Copilot Workspace ฯลฯ ที่อ่าน `AGENTS.md` อัตโนมัติ | เปิด repo นี้แล้วทำงานได้เลย — เอเจนต์จะเห็นกติกาเอง |
-| เครื่องมือที่ไม่รู้จักไฟล์นี้ | เริ่มบทสนทนาด้วย: **“อ่าน `AGENTS.md` แล้วทำตาม”** |
-| เอเจนต์ที่รันใน sandbox อ่านไฟล์นอกโปรเจกต์ไม่ได้ | วาง `AGENTS.md` ไว้ที่ราก repo เดียวกัน (ไฟล์อยู่ในโปรเจกต์แล้ว) |
+| เครื่องมือ | อ่าน `AGENTS.md` เองไหม | ต้องทำอะไรใน repo นี้ |
+|---|---|---|
+| **Codex** (OpenAI) | ✅ อ่านเอง — *“Codex reads AGENTS.md files before doing any work”* ไล่จากราก repo ลงมาถึงโฟลเดอร์ที่กำลังทำงาน | ไม่ต้องทำอะไร |
+| **Cursor** | ✅ อ่านเอง — รองรับ `AGENTS.md` ทั้งราก repo และโฟลเดอร์ย่อย | ไม่ต้องทำอะไร |
+| **GitHub Copilot** (cloud agent / VS Code / Copilot CLI) | ✅ อ่านเอง — รองรับ `AGENTS.md` ในฐานะ agent instructions | ไม่ต้องทำอะไร |
+| **Claude Code** | ⚠️ อ่าน**ก็ต่อเมื่อไม่มี `CLAUDE.md`** ในโฟลเดอร์ปัจจุบันหรือชั้นเหนือขึ้นไป (ตั้งแต่ v2.1.277) — ถ้ามี `CLAUDE.md` การ fallback ไปอ่าน `AGENTS.md` จะถูกยกเลิก | repo นี้มี [`CLAUDE.md`](CLAUDE.md) ที่สั่ง import `@AGENTS.md` ให้แล้ว จึงใช้ได้ทุกเวอร์ชัน |
+| **Gemini CLI** | ❌ ไม่อ่าน — ค่าเริ่มต้นอ่านเฉพาะไฟล์ชื่อ `GEMINI.md` | repo นี้มี [`GEMINI.md`](GEMINI.md) ที่สั่ง import `@./AGENTS.md` ให้แล้ว (ทางเลือก: ตั้ง `context.fileName` ใน `.gemini/settings.json`) |
+| เครื่องมือที่ไม่รู้จักไฟล์นี้ | ❌ ไม่ | เริ่มบทสนทนาด้วย: **“อ่าน `AGENTS.md` แล้วทำตาม”** |
+| เอเจนต์ที่รันใน sandbox อ่านไฟล์นอกโปรเจกต์ไม่ได้ | — | วาง `AGENTS.md` ไว้ที่ราก repo เดียวกัน (ไฟล์อยู่ในโปรเจกต์แล้ว) |
+
+> 📖 เอกสารทางการที่ใช้ตรวจสอบ (ต.ค. 2026): [Codex · AGENTS.md](https://developers.openai.com/codex/agent-configuration/agents-md) · [Cursor · Rules](https://cursor.com/docs/rules) · [Claude Code · Memory](https://code.claude.com/docs/en/memory) · [Gemini CLI · GEMINI.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md) · [GitHub Copilot · Custom instructions support](https://docs.github.com/en/copilot/reference/custom-instructions-support)
 
 กติกาหลักในไฟล์นั้น: `thinking` ตอนวางแผน → `coding` ตอนลงมือแก้ → `success` / `error` ตามผลเทสต์
 → `done <fix|feature|docs>` ตอนจบงาน **ครั้งเดียว** ข้อความสั้น เป็นภาษาไทย
@@ -218,6 +224,9 @@ sprites/            ← ภาพน้องส้ม 6 ท่า (png หล�
 icons/              ← ไอคอนแอป (favicon / 192 / 512 / apple-touch) เจนจาก sprites/idle.png
 manifest.webmanifest← ข้อมูลแอปสำหรับติดตั้ง (ชื่อ, ไอคอน, สีพื้น)
 sw.js               ← service worker (แคชเปลือกแอป แต่ไม่แคช status.json)
+AGENTS.md           ← กติกาให้เอเจนต์อ่าน (Codex / Cursor / Copilot อ่านอัตโนมัติ)
+CLAUDE.md           ← ตัวชี้ของ Claude Code (สั่ง import @AGENTS.md)
+GEMINI.md           ← ตัวชี้ของ Gemini CLI (สั่ง import @./AGENTS.md)
 examples/           ← ตัวอย่าง status.json / garden.json
 ```
 
@@ -382,7 +391,7 @@ node set-status.js done "done" feature
 | Agent / system | How |
 |---|---|
 | Claude Code | Add **hooks** (`PreToolUse` → `thinking`, `PostToolUse` → `done`) that run the commands above |
-| Codex / Aider / OpenHands / Cursor | Put the same lines in the tool's **system prompt** or **pre-commit hook** |
+| Tools that don't read `AGENTS.md` themselves | Put the same lines in the tool's **system prompt** or **hooks / pre-commit** |
 | GitHub Actions | Run `node set-status.js coding "${{ github.job }}"` in each workflow step |
 | Your own scripts | Write `status.json` directly — see `examples/status.json` |
 
@@ -393,11 +402,17 @@ No Node required — any tool that can write JSON (`echo`, Python, …) works.
 This repo ships [`AGENTS.md`](AGENTS.md) with instructions an AI coding agent reads and follows,
 calling `set-status.js` on its own as the work phase changes — no per-tool hook wiring needed.
 
-| Tool | What to do |
-|---|---|
-| Claude Code, Codex, Cursor, Gemini CLI, Copilot Workspace, … (read `AGENTS.md` automatically) | Just open this repo and work — the agent picks the rules up |
-| Tools that ignore that file | Start with: **“read AGENTS.md and follow it”** |
-| Agents sandboxed away from the project | `AGENTS.md` lives at the repo root, so it travels with the checkout |
+| Tool | Reads `AGENTS.md` by itself? | What to do in this repo |
+|---|---|---|
+| **Codex** (OpenAI) | ✅ Yes — *“Codex reads AGENTS.md files before doing any work”*, walking from the repo root down to the working directory | Nothing |
+| **Cursor** | ✅ Yes — supports `AGENTS.md` at the project root and in subdirectories | Nothing |
+| **GitHub Copilot** (cloud agent / VS Code / Copilot CLI) | ✅ Yes — `AGENTS.md` is supported as agent instructions | Nothing |
+| **Claude Code** | ⚠️ Only **when there is no `CLAUDE.md`** in the working directory or above (v2.1.277+) — a `CLAUDE.md` suppresses the `AGENTS.md` fallback | This repo ships [`CLAUDE.md`](CLAUDE.md) with an `@AGENTS.md` import, so it works on every version |
+| **Gemini CLI** | ❌ No — by default it only loads files named `GEMINI.md` | This repo ships [`GEMINI.md`](GEMINI.md) importing `@./AGENTS.md` (alternative: set `context.fileName` in `.gemini/settings.json`) |
+| Tools that ignore this file | ❌ No | Start with: **“read AGENTS.md and follow it”** |
+| Agents sandboxed away from the project | — | `AGENTS.md` lives at the repo root, so it travels with the checkout |
+
+> 📖 Official docs checked (Oct 2026): [Codex · AGENTS.md](https://developers.openai.com/codex/agent-configuration/agents-md) · [Cursor · Rules](https://cursor.com/docs/rules) · [Claude Code · Memory](https://code.claude.com/docs/en/memory) · [Gemini CLI · GEMINI.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md) · [GitHub Copilot · Custom instructions support](https://docs.github.com/en/copilot/reference/custom-instructions-support)
 
 The rules are: `thinking` while planning → `coding` while editing → `success` / `error` for the
 build result → `done <fix|feature|docs>` once, when the whole task is done. Messages stay short and
