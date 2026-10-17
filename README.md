@@ -92,6 +92,25 @@ node set-status.js done "อัปเดตเอกสาร" docs
 หน้าเว็บจะวาดสวนจาก `garden.json` แสดงจำนวนต้นไม้รวม และ **สตรีครายวัน 🔥**
 ถ้าขาดไป 1 วันไม่มีงาน `done` เลย ใบไม้ทุกต้นจะเริ่มเหลือง (พอทำเสร็จอีกครั้งก็กลับมาเขียว)
 
+## 🧪 เทสต์
+
+ใช้ `node:test` ในตัว Node — ไม่ต้องติดตั้งอะไรเลย (25 เทสต์)
+
+```bash
+node --test "tests/*.test.js"
+```
+
+| ไฟล์ | ครอบอะไร |
+|---|---|
+| `tests/set-status.test.js` | การเขียนสถานะ, ปลูกต้นไม้ตามชนิดงาน, สตรีคต่อเนื่อง/ขาดช่วง, `garden.json` พัง, ช่วงค่า `--ttl` |
+| `tests/browser-smoke.test.js` | เปิด **หน้าเว็บจริงใน Chrome/Edge headless** แล้วเช็กทีละท่า (ภาพ/ฟองคำพูด/ป้ายสถานะ), `ttlMinutes`, สถานะที่ไม่รู้จัก, การวาดสวน, ใบเหลืองจาก ISO เต็ม, `aria-live`/`aria-pressed`, การขยับ (หายใจ/น้ำหยด/ประกาย/หัวใจ), กดลูบหัว, `prefers-reduced-motion`, และ fallback `.png → .svg` |
+
+เทสต์ทุกตัวสร้างสำเนาเว็บในโฟลเดอร์ชั่วคราวแล้วเสิร์ฟเอง — **ไม่แตะ `status.json` / `garden.json` ของจริง**
+และเก็บกวาดโฟลเดอร์ทิ้งเมื่อจบ
+
+> 💡 เทสต์เบราว์เซอร์จะ **skip** (ไม่ใช่ pass) ถ้าเครื่องไม่มี Chrome/Edge
+> ตั้ง path เองได้ด้วย `CHROME_PATH="/path/to/chrome" node --test "tests/*.test.js"`
+
 ## 🎬 ขยับได้ + ลูกเล่น
 
 ภาพน้องส้มเป็น PNG นิ่ง ๆ แต่หน้าเว็บเติมชีวิตให้ด้วย CSS ล้วน — ไม่ต้องแก้รูปเลย
@@ -176,6 +195,7 @@ status.json         ← เขียนสถานะที่นี่ (อ่
 garden.json         ← ส่วนตัวของสวน (งอกเองตอน done)
 set-status.js       ← คำสั่งเขียนสถานะจาก terminal
 demo.js             ← สคริปต์ทดสอบ สลับสถานะเองทุก 3 วินาที
+tests/              ← เทสต์หน่วย + เทสต์เบราว์เซอร์ headless (node --test ไม่ต้องลงอะไรเพิ่ม)
 sprites/            ← ภาพน้องส้ม 6 ท่า (png หลัก + svg สำรอง เปลี่ยนไฟล์ชื่อเดิมได้)
 icons/              ← ไอคอนแอป (favicon / 192 / 512 / apple-touch) เจนจาก sprites/idle.png
 manifest.webmanifest← ข้อมูลแอปสำหรับติดตั้ง (ชื่อ, ไอคอน, สีพื้น)
@@ -293,6 +313,25 @@ node set-status.js done "updated the docs" docs
 The page renders the garden from `garden.json`, shows the total plant count and the
 **daily streak 🔥**. Skip a day with no `done` and every leaf starts turning yellow;
 finish something again and the garden turns green.
+
+## 🧪 Tests
+
+Built-in `node:test` — nothing to install (25 tests):
+
+```bash
+node --test "tests/*.test.js"
+```
+
+| File | Covers |
+|---|---|
+| `tests/set-status.test.js` | status writing, plant kinds, streak continuity/gaps, broken `garden.json`, `--ttl` clamping |
+| `tests/browser-smoke.test.js` | drives the **real page in headless Chrome/Edge**: every pose (sprite, bubble, pill), `ttlMinutes`, unknown status, garden rendering, ISO date yellowing, `aria-live`/`aria-pressed`, motion (breathing, drops, sparkles, hearts), click-to-pet, `prefers-reduced-motion`, `.png → .svg` fallback |
+
+Each test builds a throwaway copy of the site and serves it itself, so the real
+`status.json` / `garden.json` are never touched, and temp folders are cleaned up.
+
+> 💡 The browser test **skips** (it does not pass) when no Chrome/Edge is found.
+> Point at one with `CHROME_PATH="/path/to/chrome" node --test "tests/*.test.js"`.
 
 ## 🎬 Motion & interactions
 
