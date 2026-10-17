@@ -13,7 +13,7 @@ repo นี้มีมาสคอตชื่อ **น้องส้ม** (`i
 | เริ่มลงมือแก้/เขียนไฟล์จริง | `node set-status.js coding "ข้อความสั้น ๆ ว่ากำลังทำอะไร"` |
 | รันเทสต์/บิลด์ **ผ่าน** | `node set-status.js success "ข้อความสั้น ๆ"` |
 | รันเทสต์/บิลด์ **ไม่ผ่าน** | `node set-status.js error "ข้อความสั้น ๆ"` |
-| **จบงานทั้งหมด** | `node set-status.js done "สรุปสั้น ๆ" <fix\\|feature\\|docs>` |
+| **จบงานทั้งหมด** | `node set-status.js done "สรุปสั้น ๆ" <fix\|feature\|docs>` |
 
 ## กติกาข้อความ
 
@@ -59,7 +59,7 @@ Call them **only when the phase changes**, never for every command you run:
 | Starting to edit/write files | `node set-status.js coding "short Thai note"` |
 | Tests or build **pass** | `node set-status.js success "short note"` |
 | Tests or build **fail** | `node set-status.js error "short note"` |
-| **All work finished** | `node set-status.js done "short summary" <fix\\|feature\\|docs>` |
+| **All work finished** | `node set-status.js done "short summary" <fix\|feature\|docs>` |
 
 Rules: messages stay **short (~40 chars) and in Thai**, `done` always carries a task type
 (`fix` flower · `feature` tree · `docs` bush) and is called **once**, only when the whole task is

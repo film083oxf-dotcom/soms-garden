@@ -162,7 +162,7 @@ repo นี้มีไฟล์ [`AGENTS.md`](AGENTS.md) ที่เขีย�
 | เอเจนต์ที่รันใน sandbox อ่านไฟล์นอกโปรเจกต์ไม่ได้ | วาง `AGENTS.md` ไว้ที่ราก repo เดียวกัน (ไฟล์อยู่ในโปรเจกต์แล้ว) |
 
 กติกาหลักในไฟล์นั้น: `thinking` ตอนวางแผน → `coding` ตอนลงมือแก้ → `success` / `error` ตามผลเทสต์
-→ `done <fix\|feature\|docs>` ตอนจบงาน **ครั้งเดียว** ข้อความสั้น เป็นภาษาไทย
+→ `done <fix|feature|docs>` ตอนจบงาน **ครั้งเดียว** ข้อความสั้น เป็นภาษาไทย
 และ **เรียกเฉพาะตอนเปลี่ยนช่วงงาน** ไม่ใช่ทุกคำสั่ง
 
 > 🧠 ถ้าเอเจนต์ของคุณยังไม่ทำตาม ลองถามกลับว่า “ตอนนี้นายทำอะไรอยู่ เขียนลง status.json ให้หน่อย”
@@ -400,7 +400,7 @@ calling `set-status.js` on its own as the work phase changes — no per-tool hoo
 | Agents sandboxed away from the project | `AGENTS.md` lives at the repo root, so it travels with the checkout |
 
 The rules are: `thinking` while planning → `coding` while editing → `success` / `error` for the
-build result → `done <fix\|feature\|docs>` once, when the whole task is done. Messages stay short and
+build result → `done <fix|feature|docs>` once, when the whole task is done. Messages stay short and
 in Thai, and the status is only reported when the phase changes — not for every command.
 
 > 🧠 If your agent still ignores it, ask “what are you doing right now? write it to status.json”
