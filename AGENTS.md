@@ -15,6 +15,22 @@ repo นี้มีมาสคอตชื่อ **น้องส้ม** (`i
 | รันเทสต์/บิลด์ **ไม่ผ่าน** | `node set-status.js error "ข้อความสั้น ๆ"` |
 | **จบงานทั้งหมด** | `node set-status.js done "สรุปสั้น ๆ" <fix\|feature\|docs>` |
 
+## บอกชื่อหน้าต่างของตัวเอง (`--window` · ใช้กับ desktop pet)
+
+ถ้าผู้ใช้เปิด desktop pet ไว้ (`cd desktop && npm start`) ให้แนบ `--window "<ชื่อหน้าต่างที่เอเจนต์ตัวนี้ทำงานอยู่>"`
+ต่อท้าย **ทุก**คำสั่ง — น้องส้มจะกระโดดไปหน้าต่างนั้นเมื่อถูกคลิก (ดูชื่อที่เปิดอยู่ด้วย `node set-status.js --list-windows`)
+
+| จังหวะ | คำสั่ง (ตัวอย่าง) |
+|---|---|
+| วางแผน | `node set-status.js thinking "ข้อความ" --window "Codex"` |
+| ลงมือแก้ | `node set-status.js coding "ข้อความ" --window "Codex"` |
+| เทสต์ผ่าน / พัง | `node set-status.js success "ข้อความ" --window "Codex"` / `node set-status.js error "ข้อความ" --window "Codex"` |
+| จบงาน | `node set-status.js done "สรุป" fix --window "Codex"` |
+
+- ชื่อ **ไม่ต้องตรงเป๊ะ** ใส่บางส่วนก็ได้ และไม่สนตัวพิมพ์เล็กใหญ่
+- ไม่ส่ง `--window` → อ่านค่าเริ่มต้นจาก `soms.config.json` (คีย์ `window`) ถ้ามีไฟล์
+- ไม่รู้ชื่อหน้าต่าง / ไม่ได้เปิด desktop pet → **ตัด flag ทิ้งได้** ห้ามทำให้งานสะดุด
+
 ## กติกาข้อความ
 
 - **สั้น** — ไม่เกิน ~40 ตัวอักษร (มันไปอยู่ในฟองคำพูดเล็ก ๆ เหนือหัวแมว)
@@ -60,6 +76,23 @@ Call them **only when the phase changes**, never for every command you run:
 | Tests or build **pass** | `node set-status.js success "short note"` |
 | Tests or build **fail** | `node set-status.js error "short note"` |
 | **All work finished** | `node set-status.js done "short summary" <fix\|feature\|docs>` |
+
+## Name your window (`--window` · for the desktop pet)
+
+If the user runs the desktop pet (`cd desktop && npm start`), append
+`--window "<the window this agent is working in>"` to **every** command — Som will jump to that
+window when clicked (list open windows with `node set-status.js --list-windows`).
+
+| Phase | Command (example) |
+|---|---|
+| Planning | `node set-status.js thinking "note" --window "Codex"` |
+| Editing | `node set-status.js coding "note" --window "Codex"` |
+| Tests pass / fail | `node set-status.js success "note" --window "Codex"` / `node set-status.js error "note" --window "Codex"` |
+| Done | `node set-status.js done "summary" fix --window "Codex"` |
+
+- The name does **not** need to be exact — a fragment works, case does not matter
+- No `--window` → falls back to the `window` key in `soms.config.json` when that file exists
+- Unknown window / no pet running → **just drop the flag**; it must never block the task
 
 Rules: messages stay **short (~40 chars) and in Thai**, `done` always carries a task type
 (`fix` flower · `feature` tree · `docs` bush) and is called **once**, only when the whole task is

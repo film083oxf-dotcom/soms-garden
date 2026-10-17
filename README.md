@@ -63,7 +63,8 @@ node demo.js 1      # รันแค่ 1 รอบให้เห็นคร�
   "status": "coding",
   "message": "กำลังเขียนหน้าล็อกอิน",   // ภาษาไทย สั้น ๆ แสดงบนฟองเหนือหัว (ว่าง = ใช้คำพูดเริ่มต้น)
   "updatedAt": "2026-10-15T09:12:30.000Z",
-  "ttlMinutes": 30                    // ไม่บังคับ: เงียบเกินกี่นาทีถือว่าหลับ (1–1440, ค่าเริ่มต้น 10)
+  "ttlMinutes": 30,                   // ไม่บังคับ: เงียบเกินกี่นาทีถือว่าหลับ (1–1440, ค่าเริ่มต้น 10)
+  "window": "Codex"                   // ไม่บังคับ: ชื่อหน้าต่างเอเจนต์ (ให้ desktop pet กระโดดไปหาเมื่อคลิก)
 }
 ```
 
@@ -110,6 +111,8 @@ node --test "tests/*.test.js"
 
 > 💡 เทสต์เบราว์เซอร์จะ **skip** (ไม่ใช่ pass) ถ้าเครื่องไม่มี Chrome/Edge
 > ตั้ง path เองได้ด้วย `CHROME_PATH="/path/to/chrome" node --test "tests/*.test.js"`
+>
+> 🖥️ เทสต์ของ desktop pet (ส่วนที่ไม่ใช้ GUI: จับคู่ชื่อหน้าต่าง/อ่านสถานะ/เมนู) รันแยก: `cd desktop && npm test`
 
 ## 🎬 ขยับได้ + ลูกเล่น
 
@@ -126,6 +129,48 @@ node --test "tests/*.test.js"
 
 > อยากได้ “กะพริบตา” จริง ๆ ต้องแยกชั้นดวงตาเป็นอีกรูป (ภาพชุดนี้วาดตาติดกับหน้า)
 > — แจ้งได้เลยถ้าอยากได้สไปรท์แบบแยกชั้นสำหรับกะพริบตา
+
+## 🖥️ Desktop pet (Electron · Windows)
+
+เปิดน้องส้มเป็นหน้าต่าง **โปร่งใส ไร้กรอบ อยู่บนสุด ไม่ขึ้น taskbar** ขนาดเท่าพื้นที่ทำงานของจอหลัก
+คลิกทะลุได้ทุกจุด **ยกเว้นตัวน้องส้มกับฟองคำพูด** และเดินไปมาตามขอบล่างจอเหนือ taskbar
+โดยอ่าน `status.json` ทุก 1 วินาทีด้วยกติกาเดียวกับหน้าเว็บทุกประการ (กติกาหลับ, `ttlMinutes`, ภาพ `sprites/` ชุดเดียวกัน — ไม่มีไฟล์รูปเพิ่ม)
+
+```bash
+cd desktop
+npm install      # ครั้งแรก (~300MB · Electron)
+npm start
+```
+
+| การกระทำ | ผล |
+|---|---|
+| เมาส์ชี้ที่ตัวน้องส้มหรือฟอง | จุดนั้นรับคลิก ส่วนอื่นของจอทะลุต่อ (แอปอื่นทำงานได้ตามปกติ) |
+| คลิกน้องส้ม | ดึงหน้าต่างเอเจนต์ (ชื่อจาก field `window` ใน `status.json`) ขึ้นหน้าสุด — ย่ออยู่จะ restore ให้; หาไม่เจอ/ดึงไม่ขึ้น น้องส้มจะบอกในฟอง ไม่แครช |
+| คลิกขวาที่น้องส้ม | เมนู **ไปหน้าต่างเอเจนต์** · **เปิดหน้าสวน** (เปิด `gardenUrl` จาก `soms.config.json`, ค่าเริ่มต้น `http://localhost:3000`) · **ปิดน้องส้ม** |
+
+ท่าทางใช้ภาพ PNG เดิมทั้งหมด (ทำท่าเดินด้วย CSS/JS ไม่มีสไปรต์เฟรมใหม่):
+`coding` เดินไปมาตัวเด้งเอียงตามจังหวะก้าว พลิกภาพตามทิศทาง เปลี่ยนทิศที่ขอบหรือหยุดสั้น ๆ · `thinking` นั่งนิ่ง
+`success` กระโดดหนึ่งครั้ง · `error` นอนแผ่ · `done` นอนหงายท้อง · `idle` หลับ — และ **เคารพ `prefers-reduced-motion`**
+
+### ตั้งชื่อหน้าต่างให้น้องส้มรู้ว่าเอเจนต์อยู่ตรงไหน
+
+```bash
+node set-status.js --list-windows                          # ดูหน้าต่างที่เปิดอยู่
+node set-status.js coding "กำลังเขียน" --window "Codex"      # ผูกสถานะกับหน้าต่าง
+node set-status.js done "เสร็จแล้ว" fix --window "VS Code"   # ชื่อบางส่วนก็ได้ ไม่สนตัวพิมพ์
+```
+
+- ไม่ส่ง `--window` → อ่านค่าเริ่มต้นจาก `soms.config.json` ที่ราก repo ([ตัวอย่าง](examples/soms.config.json))
+
+```json
+{
+  "window": "Codex",
+  "gardenUrl": "http://localhost:3000"
+}
+```
+
+> 💻 ทดสอบแล้วบน **Windows** — การค้น/ดึงหน้าต่างใช้ PowerShell + Win32 จึงมีเฉพาะ Windows
+> (ชื่อหน้าต่างถูกส่งเข้า PowerShell เป็น argv ไม่ต่อเข้าสตริงคำสั่ง จึงกัน command injection)
 
 ## 🤖 วิธีเชื่อมกับเอเจนต์ตัวอื่น
 
@@ -227,7 +272,8 @@ sw.js               ← service worker (แคชเปลือกแอป แ
 AGENTS.md           ← กติกาให้เอเจนต์อ่าน (Codex / Cursor / Copilot อ่านอัตโนมัติ)
 CLAUDE.md           ← ตัวชี้ของ Claude Code (สั่ง import @AGENTS.md)
 GEMINI.md           ← ตัวชี้ของ Gemini CLI (สั่ง import @./AGENTS.md)
-examples/           ← ตัวอย่าง status.json / garden.json
+examples/           ← ตัวอย่าง status.json / garden.json / soms.config.json
+desktop/            ← desktop pet ด้วย Electron (Windows): main / preload / renderer / lib / powershell + เทสต์หน่วย
 ```
 
 ## 📄 License
@@ -307,6 +353,8 @@ File format:
 
 `message` (optional, short, shown in the speech bubble) falls back to the default line when empty.
 `ttlMinutes` (optional, 1–1440, default 10) is how long Som waits before dozing off.
+`window` (optional) is a partial window title of the agent's window, used by the desktop pet —
+clicking Som brings that window to the front (see the desktop pet section).
 
 ```json
 {
@@ -359,6 +407,8 @@ Each test builds a throwaway copy of the site and serves it itself, so the real
 
 > 💡 The browser test **skips** (it does not pass) when no Chrome/Edge is found.
 > Point at one with `CHROME_PATH="/path/to/chrome" node --test "tests/*.test.js"`.
+>
+> 🖥️ Desktop pet tests (the non-GUI parts: window matching, status reading, menu) run separately: `cd desktop && npm test`.
 
 ## 🎬 Motion & interactions
 
@@ -375,6 +425,51 @@ Som's art is static PNG, but the page adds life with pure CSS — no art edits n
 
 > Real **eye blinking** would need the eyes on a separate art layer (this art set draws the eyes into the
 > face) — happy to produce a layered sprite set if you want it.
+
+## 🖥️ Desktop pet (Electron · Windows)
+
+Som as a **transparent, frameless, always-on-top** window with no taskbar entry, sized to your
+primary display's work area. The whole window is click-through **except Som and the speech bubble**,
+and Som waddles along the bottom edge above the taskbar. It polls `status.json` every second with the
+exact same rules as the web page (sleep timer, `ttlMinutes`, the same `sprites/` files — no new art).
+
+```bash
+cd desktop
+npm install      # first run (~300MB for Electron)
+npm start
+```
+
+| Action | Result |
+|---|---|
+| Hover Som or the bubble | That spot takes clicks; everything else stays click-through |
+| Click Som | Brings the agent's window (the `window` field in `status.json`) to the front — restores it when minimized; if it can't be found or raised, Som says so in the bubble instead of crashing |
+| Right-click Som | Menu: **go to the agent window** · **open the garden** (`gardenUrl` from `soms.config.json`, default `http://localhost:3000`) · **quit Som** |
+
+All poses reuse the existing PNGs (the walk is pure CSS/JS, no new sprite frames):
+`coding` walks with a per-step bob and tilt, flips with direction, turns at edges or pauses briefly ·
+`thinking` sits still · `success` hops once · `error` sprawls · `done` lies belly-up · `idle` sleeps —
+and `prefers-reduced-motion` is respected.
+
+### Tell Som which window you are in
+
+```bash
+node set-status.js --list-windows                        # list open windows
+node set-status.js coding "working" --window "Codex"     # bind the status to a window
+node set-status.js done "done" fix --window "VS Code"    # a fragment is fine, case-insensitive
+```
+
+- Without `--window` the default comes from `soms.config.json` at the repo root ([example](examples/soms.config.json))
+
+```json
+{
+  "window": "Codex",
+  "gardenUrl": "http://localhost:3000"
+}
+```
+
+> 💻 Tested on **Windows** — finding/raising windows goes through PowerShell + Win32, so that part is
+> Windows-only (the window name is passed as a process argument, never spliced into a command string,
+> so it is safe from command injection).
 
 ## 🤖 Connecting other agents
 
