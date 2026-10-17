@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Som's Garden · น้องส้มทำสวน</title>
+
+<!-- ติดตั้งเป็นแอปได้ (manifest + ไอคอน) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#FFF4E4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="น้องส้ม">
+<meta name="description" content="แมวส้มอ้วนที่เปลี่ยนท่าทางตามสถานะของ AI coding agent — เปิดทิ้งไว้ข้างจอได้เลย">
+
 <style>
   /* =========================================================
      ธีม — เลือกได้ 3 แบบ (จำค่าไว้ใน localStorage)
@@ -87,6 +99,21 @@
     opacity: .75;
   }
   .themes button.on { opacity: 1; font-weight: 700; box-shadow: 0 0 0 2px rgba(255, 169, 77, .45) inset; }
+  /* ปุ่มติดตั้งเป็นแอป — โผล่เมื่อเบราว์เซอร์พร้อมติดตั้งเท่านั้น */
+  #installBtn {
+    display: none;
+    font: inherit;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px dashed rgba(255, 169, 77, .85);
+    background: rgba(255, 236, 204, .9);
+    color: #8A5A1E;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  #installBtn { margin-left: auto; margin-right: 2px; }
+  #installBtn.show { display: inline-block; }
 
   /* =========================================================
      เวที: ฟองคำพูด + น้องส้ม + สวน
@@ -270,6 +297,7 @@
 <main class="stage">
   <header class="topbar">
     <span class="brand">🍊 Som's Garden</span>
+    <button id="installBtn" type="button" title="ติดตั้งเป็นแอปแยกหน้าต่าง">⬇ ติดตั้ง</button>
     <nav class="themes">
       <button data-set-theme="transparent">โปร่งใส</button>
       <button data-set-theme="pastel">พาสเทล</button>
@@ -570,6 +598,35 @@
 
   tick();
   setInterval(tick, POLL_MS);
+
+  /* ---------- ติดตั้งเป็นแอป (manifest + service worker) ---------- */
+  var installBtn = $('installBtn');
+  var installEvent = null;
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* ไม่มี SW ก็ยังใช้เว็บได้ปกติ */ });
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();                       // เก็บไว้แสดงตอนกดปุ่มเอง
+    installEvent = e;
+    installBtn.classList.add('show');
+  });
+
+  installBtn.addEventListener('click', function () {
+    if (!installEvent) return;
+    installEvent.prompt();
+    installEvent.userChoice.then(function () {
+      installEvent = null;
+      installBtn.classList.remove('show');
+    });
+  });
+
+  window.addEventListener('appinstalled', function () {
+    installBtn.classList.remove('show');
+  });
 })();
 </script>
 </body>

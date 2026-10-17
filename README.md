@@ -107,6 +107,22 @@ node set-status.js done "เสร็จแล้ว" feature
 
 > ไม่ต้องใช้ Node ก็ได้ — เขียน `status.json` ด้วย `echo`, Python, หรืออะไรก็ตามที่เขียน JSON เป็น
 
+## 📲 ติดตั้งเป็นแอปแยกหน้าต่าง
+
+เปิดหน้าเว็บครั้งเดียว แล้วกดปุ่ม **⬇ ติดตั้ง** ที่มุมขวาบน
+น้องส้มจะกลายเป็นแอปของตัวเอง (ไม่มีแถบที่อยู่ มีไอคอนแมวบน Dock/Taskbar)
+เปิดค้างข้างจอได้เหมือนแอปจริง ๆ
+
+- **Chrome / Edge (คอมพิวเตอร์):** กดปุ่มติดตั้ง หรือไอคอน ⊕ ในแถบที่อยู่
+- **มือถือ / แท็บเล็ต:** เมนูเบราว์เซอร์ → "เพิ่มไปที่หน้าจอโฮม"
+- **Safari (macOS/iOS):** แชร์ → "เพิ่มไปยัง Dock" / "เพิ่มไปที่หน้าจอโฮม"
+
+หลังติดตั้งแล้ว ตัวเพจยังอ่าน `status.json` จาก server เดิมทุก 1 วินาทีเหมือนเคย
+(ปุ่มติดตั้งจะโผล่เมื่อเบราว์เซอร์รองรับเท่านั้น — เปิดผ่าน `file://` จะไม่เห็นปุ่มนี้)
+
+> 🔌 ไฟล์ `sw.js` แคชแค่ "เปลือกแอป" (หน้าเว็บ + รูปน้องส้ม) ไว้เปิดได้แม้เน็ตหลุด
+> ส่วน `status.json` / `garden.json` **ไม่แคชเด็ดขาด** สถานะจึงสดใหม่เสมอ
+
 ## 🎨 วิธีเปลี่ยนภาพน้องส้ม
 
 ภาพน้องส้มเป็น **PNG โปร่งใสที่เจนจาก AI** แยกไฟล์ตามท่าในโฟลเดอร์ `sprites/`
@@ -136,6 +152,9 @@ garden.json         ← ส่วนตัวของสวน (งอกเอ
 set-status.js       ← คำสั่งเขียนสถานะจาก terminal
 demo.js             ← สคริปต์ทดสอบ สลับสถานะเองทุก 3 วินาที
 sprites/            ← ภาพน้องส้ม 6 ท่า (png หลัก + svg สำรอง เปลี่ยนไฟล์ชื่อเดิมได้)
+icons/              ← ไอคอนแอป (favicon / 192 / 512 / apple-touch) เจนจาก sprites/idle.png
+manifest.webmanifest← ข้อมูลแอปสำหรับติดตั้ง (ชื่อ, ไอคอน, สีพื้น)
+sw.js               ← service worker (แคชเปลือกแอป แต่ไม่แคช status.json)
 examples/           ← ตัวอย่าง status.json / garden.json
 ```
 
@@ -255,6 +274,23 @@ node set-status.js done "done" feature
 | Your own scripts | Write `status.json` directly — see `examples/status.json` |
 
 No Node required — any tool that can write JSON (`echo`, Python, …) works.
+
+## 📲 Install it as its own app
+
+Open the page once, then hit **⬇ ติดตั้ง** (Install) in the top-right corner.
+Som becomes a standalone app: no address bar, a cat icon in your Dock or Taskbar,
+and a window you can park beside your editor.
+
+- **Chrome / Edge (desktop):** click the install button, or the ⊕ icon in the address bar
+- **Android / tablet:** browser menu → "Add to Home screen"
+- **Safari (macOS / iOS):** Share → "Add to Dock" / "Add to Home Screen"
+
+The installed app still reads `status.json` from your server every second.
+The install button only appears when the browser supports installing
+(opening the page via `file://` will not show it).
+
+> 🔌 `sw.js` caches only the app shell (page + cat sprites) so it opens offline.
+> `status.json` and `garden.json` are **never** cached, so the state stays live.
 
 ## 🎨 Replacing the cat art
 

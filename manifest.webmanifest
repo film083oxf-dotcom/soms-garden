@@ -1,0 +1,29 @@
+{
+  "name": "Som's Garden · น้องส้มทำสวน",
+  "short_name": "น้องส้ม",
+  "description": "แมวส้มอ้วนที่เปลี่ยนท่าทางตามสถานะของ AI coding agent — เปิดทิ้งไว้ข้างจอได้เลย",
+  "lang": "th",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#FFF4E4",
+  "theme_color": "#FFF4E4",
+  "categories": ["productivity", "utilities", "lifestyle"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
