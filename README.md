@@ -74,6 +74,11 @@ node demo.js 1      # รันแค่ 1 รอบให้เห็นคร�
 node set-status.js coding "รันเทสต์ทั้งโปรเจกต์" --ttl=45
 ```
 
+> 📝 `status.json` กับ `garden.json` เป็น **ข้อมูลรันไทม์** (สถานะ/สวนของคุณ) จึงถูก `.gitignore` ไว้
+> และ **ไม่ได้ commit** — ครั้งแรกที่รัน `node set-status.js` หรือ `node demo.js` ไฟล์จะถูกสร้างให้เอง
+> ถ้าอยากเริ่มจากข้อมูลตัวอย่าง ดูได้ที่ [`examples/status.json`](examples/status.json)
+> และ [`examples/garden.json`](examples/garden.json)
+
 ## 🌳 สวนของน้องส้ม (`garden.json`)
 
 ทุกครั้งที่สถานะเป็น `done` จะมีต้นไม้งอกขึ้น 1 ต้น ชนิดขึ้นกับ **ประเภทงาน**
@@ -95,7 +100,7 @@ node set-status.js done "อัปเดตเอกสาร" docs
 
 ## 🧪 เทสต์
 
-ใช้ `node:test` ในตัว Node — ไม่ต้องติดตั้งอะไรเลย (25 เทสต์)
+ใช้ `node:test` ในตัว Node — ไม่ต้องติดตั้งอะไรเลย (26 เทสต์)
 
 ```bash
 node --test "tests/*.test.js"
@@ -279,8 +284,8 @@ sprites/error.png      sprites/done.png     sprites/idle.png
 
 ```
 index.html          ← หน้าเว็บหลัก (HTML+CSS+JS ล้วน)
-status.json         ← เขียนสถานะที่นี่ (อ่านทุก 1 วินาที)
-garden.json         ← ส่วนตัวของสวน (งอกเองตอน done)
+status.json         ← ข้อมูลรันไทม์: เขียนสถานะ (สร้างอัตโนมัติ · ไม่ track)
+garden.json         ← ข้อมูลรันไทม์: สวน (งอกเองตอน done · ไม่ track)
 set-status.js       ← คำสั่งเขียนสถานะจาก terminal
 demo.js             ← สคริปต์ทดสอบ สลับสถานะเองทุก 3 วินาที
 tests/              ← เทสต์หน่วย + เทสต์เบราว์เซอร์ headless (node --test ไม่ต้องลงอะไรเพิ่ม)
@@ -388,6 +393,11 @@ clicking Som brings that window to the front (see the desktop pet section).
 node set-status.js coding "running the full suite" --ttl=45
 ```
 
+> 📝 `status.json` and `garden.json` are **runtime data** (your status and garden), so they are
+> `.gitignore`d and never committed — the first `node set-status.js` (or `node demo.js`) creates them.
+> Copy the seeds from [`examples/status.json`](examples/status.json) /
+> [`examples/garden.json`](examples/garden.json) if you want a starting point.
+
 ## 🌳 The garden (`garden.json`)
 
 Every `done` grows one plant, whose **kind depends on the task type**
@@ -410,7 +420,7 @@ finish something again and the garden turns green.
 
 ## 🧪 Tests
 
-Built-in `node:test` — nothing to install (25 tests):
+Built-in `node:test` — nothing to install (26 tests):
 
 ```bash
 node --test "tests/*.test.js"

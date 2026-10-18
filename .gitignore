@@ -17,3 +17,7 @@ Thumbs.db
 # secrets (กันเผลอ commit คีย์ลับ)
 .env
 .env.*
+
+# runtime state (สร้างใหม่ได้ด้วย set-status.js / demo.js — ตัวอย่างอยู่ใน examples/)
+status.json
+garden.json

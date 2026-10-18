@@ -64,6 +64,7 @@ const PROBE = `
     return {
       body: document.body.className,
       bubble: document.getElementById('bubbleText').textContent,
+      hint: document.getElementById('hint').textContent,
       pill: document.getElementById('statusPill').textContent,
       sprite: s.getAttribute('src'),
       spriteLoaded: s.naturalWidth,
@@ -113,9 +114,12 @@ const PROBE = `
     tries += 1;
     var s = document.getElementById('sprite');
     var text = document.getElementById('bubbleText').textContent;
+    var hint = document.getElementById('hint').textContent;
     var loaded = !!(s && s.complete && s.naturalWidth > 0);
     // รอ tick() รอบแรก (ฟองคำพูดหลุดจากค่าเริ่มต้น) + รูปโหลดเสร็จ + ให้ garden.json วาดเสร็จ
-    if (tries > 1 && text !== 'กำลังตื่นอยู่...' && loaded) return setTimeout(finish, 500);
+    // กรณียังไม่มี status.json ฟองจะไม่เปลี่ยน แต่ hint จะบอก → ถือว่าพร้อมแล้ว
+    var ready = text !== 'กำลังตื่นอยู่...' || hint.indexOf('ยังไม่เจอ status.json') >= 0;
+    if (tries > 1 && ready && loaded) return setTimeout(finish, 500);
     if (tries > 100) return finish();
     setTimeout(wait, 50);
   }
@@ -267,6 +271,17 @@ test('browser smoke: หน้าเว็บจริงใน Chrome headless'
     });
     fs.rmSync(site, { recursive: true, force: true });
     fs.rmSync(profile, { recursive: true, force: true });
+  });
+
+  await t.test('โคลนใหม่: ไม่มี status.json / garden.json → หลับ + คำใบ้ ไม่พัง', async () => {
+    fs.rmSync(path.join(site, 'status.json'), { force: true });
+    fs.rmSync(path.join(site, 'garden.json'), { force: true });
+    const { page } = await readPage(origin, profile, dumpFile);
+
+    assert.equal(page.body, 'st-idle');
+    assert.match(page.hint, /ยังไม่เจอ status\.json/);
+    assert.equal(page.plantNodes, 0, 'ยังไม่มีสวนก็ต้องไม่พัง');
+    assert.equal(page.spriteLoaded, 512, 'ยังต้องแสดงภาพน้องส้มได้');
   });
 
   await t.test('ทุกท่า: ภาพ/ฟองคำพูด/ป้ายสถานะตรงกับ status.json', async () => {
