@@ -19,5 +19,6 @@ Thumbs.db
 .env.*
 
 # runtime state (สร้างใหม่ได้ด้วย set-status.js / demo.js — ตัวอย่างอยู่ใน examples/)
-status.json
-garden.json
+# ใส่ / นำหน้าเพื่อ ignore เฉพาะไฟล์ที่ราก repo ไม่ให้โดน examples/status.json
+/status.json
+/garden.json
