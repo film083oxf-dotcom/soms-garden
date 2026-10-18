@@ -100,7 +100,7 @@ node set-status.js done "อัปเดตเอกสาร" docs
 
 ## 🧪 เทสต์
 
-ใช้ `node:test` ในตัว Node — ไม่ต้องติดตั้งอะไรเลย (26 เทสต์)
+ใช้ `node:test` ในตัว Node — ไม่ต้องติดตั้งอะไรเลย (30 เทสต์)
 
 ```bash
 node --test "tests/*.test.js"
@@ -109,6 +109,7 @@ node --test "tests/*.test.js"
 | ไฟล์ | ครอบอะไร |
 |---|---|
 | `tests/set-status.test.js` | การเขียนสถานะ, ปลูกต้นไม้ตามชนิดงาน, สตรีคต่อเนื่อง/ขาดช่วง, `garden.json` พัง, ช่วงค่า `--ttl` |
+| `tests/pixel-assets.test.js` | ภาพที่เจนออกมา: 6 ท่าเป็น nearest ×8 จริง, alpha 0/255, 24 สีร่วม · ไอคอนตรงกับ `sprites/idle.png` ทุกเม็ดพิกเซล |
 | `tests/browser-smoke.test.js` | เปิด **หน้าเว็บจริงใน Chrome/Edge headless** แล้วเช็กทีละท่า (ภาพ/ฟองคำพูด/ป้ายสถานะ), `ttlMinutes`, สถานะที่ไม่รู้จัก, การวาดสวน, ใบเหลืองจาก ISO เต็ม, `aria-live`/`aria-pressed`, การขยับ (หายใจ/น้ำหยด/ประกาย/หัวใจ), กดลูบหัว, `prefers-reduced-motion`, และ fallback `.png → .svg` |
 
 เทสต์ทุกตัวสร้างสำเนาเว็บในโฟลเดอร์ชั่วคราวแล้วเสิร์ฟเอง — **ไม่แตะ `status.json` / `garden.json` ของจริง**
@@ -119,7 +120,7 @@ node --test "tests/*.test.js"
 >
 > 🖥️ เทสต์ของ desktop pet (ส่วนที่ไม่ใช้ GUI: จับคู่ชื่อหน้าต่าง/อ่านสถานะ/เมนู/สลับโหมดหลับ) รันแยก: `cd desktop && npm test`
 > — ชุด `renderer-mode.test.js` รัน `renderer.js` จริงใน sandbox DOM ปลอม แล้วยืนยันว่า idle → sleepy, สถานะอื่น → normal
-> และเช็กว่าไฟล์สไปรต์ชีตที่ CSS อ้างถึงมีอยู่จริง
+> และเช็กว่าสไปรต์ชีตหลับเป็น 1024, ใช้ 24 สีร่วม, alpha 0/255 และ **วางเส้นพื้น/กึ่งกลางตรงกับ `sprites/idle.png`** (สลับแล้วไม่กระโดด)
 
 ## 🎬 ขยับได้ + ลูกเล่น
 
@@ -167,14 +168,24 @@ npm start
 (ตาราง 2×2 = 4 เฟรม: นอนขด · หาว · กลิ้ง · นอนหงาย) และกลับมาท่าปกติ **ทันที** ที่มีสถานะอื่นเข้ามา
 
 - อนิเมชัน `6s steps(1, end)` — เฟรมละ 1.5 วินาที ค้างท่าไว้แล้วตัดไปเฟรมถัดไป (ไม่ใช่การ fade)
-- ขนาด/ตำแหน่งของแมวในทุกเฟรมถูกคำนวณให้ความสูง ขอบล่าง และจุดกึ่งกลางตรงกับ `sprites/idle.png`
-  ตอนแสดงในกล่อง 170×150 และใช้ `clip-path` ตัดไม่ให้เฟรมข้างเคียงโผล่
-- ภาพชุดนี้เป็นงานวาดขอบเนียน (ไม่ใช่พิกเซลอาร์ต) จึง **ไม่ใช้** `image-rendering: pixelated`
+- ชีตเป็น **พิกเซลอาร์ตชุดเดียวกับ 6 ท่าหลัก**: 4 เฟรม เฟรมละ 512 (= 64×64 ×8 nearest) รวมเป็น 1024
+  `background-size` = 2 เท่าของ `--pet-size` → 1 เฟรม = `--pet-size` พอดี จึงไม่ต้องใช้ `clip-path` แล้ว
+- ทุกเฟรมถูกวางให้ **เส้นพื้นและจุดกึ่งกลางตรงกับ `sprites/idle.png`** (วัดจาก bounding box ของแมว)
+  → สลับ `idle` ↔ โหมดหลับแล้วตัวน้องไม่กระโดด (มีเทสต์ยืนยันไว้)
+- ใช้ `image-rendering: pixelated` เหมือนสไปรต์ท่าปกติ
 - `prefers-reduced-motion: reduce` → หยุดที่เฟรมแรก (ไม่มีอนิเมชัน)
 - สลับเองชั่วคราวได้จาก DevTools: `window.somMode('sleepy')` / `window.somMode('normal')`
 
-> ถ้าเปลี่ยนไฟล์สไปรต์ชีต ต้องคำนวณค่า `background-size`, `background-position` และ `clip-path` ของทั้ง 4 เฟรมใหม่
-> (ค่าเหล่านี้ผูกกับ bounding box ของแมวในแต่ละเฟรม)
+ตัวแปลงชีตหลับอยู่ใน [`tools/pixelate-sleepy.js`](tools/pixelate-sleepy.js):
+สำรองต้นฉบับไป `assets/original/`, แยก 4 เฟรม, ย่อด้วย area filter, บังคับ alpha 0/255
+แล้ว map เข้าพาเลตต์ 24 สีที่ **อ่านจาก `sprites/*.png`** (ไม่สร้างสีใหม่) ก่อนขยาย nearest ×8
+
+```bash
+node tools/pixelate-sleepy.js             # แปลงชีตหลับจาก assets/original (รันซ้ำได้ผลเดิม)
+```
+
+> เปลี่ยนไฟล์สไปรต์ชีตเอง? แค่แทนที่ `assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png`
+> แล้วรันตัวแปลงด้านบน — ไม่ต้องแก้ CSS อีก เพราะเรขาคณิตถูกจัดให้ตรงกับ `sprites/idle.png` แล้ว
 
 ### ตั้งชื่อหน้าต่างให้น้องส้มรู้ว่าเอเจนต์อยู่ตรงไหน
 
@@ -189,9 +200,13 @@ node set-status.js done "เสร็จแล้ว" fix --window "VS Code"   #
 ```json
 {
   "window": "Codex",
-  "gardenUrl": "http://localhost:3000"
+  "gardenUrl": "http://localhost:3000",
+  "petSize": 192
 }
 ```
+
+- `petSize` = ขนาดตัวน้องส้มบนเดสก์ท็อป ต้องเป็นจำนวนเต็มเท่าของ 64 (64/128/192/256/320/384 · ค่าเริ่มต้น 192)
+  เพื่อให้พิกเซลอาร์ตคมและไม่เบี้ยวเวลาย่อ/ขยาย — แก้แล้วรีสตาร์ท `npm start`
 
 > 💻 ทดสอบแล้วบน **Windows** — การค้น/ดึงหน้าต่างใช้ PowerShell + Win32 จึงมีเฉพาะ Windows
 > (ชื่อหน้าต่างถูกส่งเข้า PowerShell เป็น argv ไม่ต่อเข้าสตริงคำสั่ง จึงกัน command injection)
@@ -261,20 +276,44 @@ repo นี้มีไฟล์ [`AGENTS.md`](AGENTS.md) ที่เขีย�
 
 ## 🎨 วิธีเปลี่ยนภาพน้องส้ม
 
-ภาพน้องส้มเป็น **PNG โปร่งใสที่เจนจาก AI** แยกไฟล์ตามท่าในโฟลเดอร์ `sprites/`
-(ส่วนไฟล์ SVG ตัว-original ยังเก็บไว้เป็นสำรอง — หน้าเว็บจะโหลด `.png` ก่อน แล้วค่อยใช้ `.svg` ถ้าไม่พบ PNG)
+ภาพน้องส้มทุกท่าเป็น **พิกเซลอาร์ต 64×64 ขยาย ×8 = 512×512** (โปร่งใส ไม่มีขอบกึ่งโปร่ง)
+แยกไฟล์ตามท่าในโฟลเดอร์ `sprites/` พร้อมไฟล์ต้นฉบับ 512 ก่อนแปลงเก็บไว้ที่ `sprites/original/`
+ส่วนสไปรต์ชีตหลับใน `assets/` และไอคอนใน `icons/` ก็เจนจากตัวแปลงชุดเดียวกัน — ใช้พาเลตต์ 24 สีร่วมกันหมด
 
 ```
 sprites/thinking.png   sprites/coding.png   sprites/success.png
 sprites/error.png      sprites/done.png     sprites/idle.png
-(+ sprites/*.svg  ไฟล์สำรอง)
+sprites/original/*.png    ← ต้นฉบับก่อนแปลง (สำรองไว้ ไม่ได้ใช้ตอนรัน)
+(+ sprites/*.svg  ไฟล์สำรองแบบเวกเตอร์)
+assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png  ← ชีตหลับ 2×2 (พิกเซล 1024)
+assets/original/…                                       ← ต้นฉบับชีตหลับ 1920
+icons/*.png                                             ← ไอคอนแอป เจนจาก sprites/idle.png
+```
+
+ตัวแปลงอยู่ใน [`tools/pixelate-sprites.js`](tools/pixelate-sprites.js) — ย่อ 512 → 64 ด้วย area filter,
+สร้างพาเลตต์ 24 สีที่**ใช้ร่วมกันทั้ง 6 ท่า**, บังคับ alpha เป็น 0/255 แล้วขยายกลับแบบ nearest ×8
+
+รายละเอียดที่ย่อแล้วหายมีแก้เฉพาะจุดไว้ใน `TOUCHUPS` / `KEEP_DETAILS` ของสคริปต์:
+Zzz ของ `idle` วาดใหม่, น้ำตาสีฟ้าของ `error` ถูกกันไว้ไม่ให้หม่นแล้วต่อหยดให้เห็นทางน้ำตา,
+ปากยิ้มของ `success` ขยายในปากเป็น 3 พิกเซลพร้อมลิ้นสีชมพู — รันซ้ำได้ผลเดิมทุกครั้ง
+
+```bash
+node tools/pixelate-sprites.js            # แปลงทั้ง 6 ท่าจาก sprites/original
+node tools/pixelate-sprites.js --help     # --size / --scale / --colors / --alpha
+node tools/pixelate-sleepy.js             # แปลงชีตหลับ 2×2 ด้วยพาเลตต์ชุดเดียวกัน
+node tools/make-icons.js                  # สร้างไอคอนทั้งหมดใหม่จาก sprites/idle.png
 ```
 
 อยากใช้ภาพ AI ที่เจนเอง? แค่ **แทนที่ไฟล์ชื่อเดิม** ไม่ต้องแก้โค้ดอะไรเลย
 
 1. เจนภาพน้องส้มท่าทางต่าง ๆ ด้วย AI (เช่น แมวส้มตัวกลมอ้วน ตาโต แก้มป่อง โทนพาสเทล)
 2. ลบพื้นหลังให้โปร่งใส (กันขอบเหลือรอยขาว) แล้วบันทึกเป็น **ชื่อไฟล์เดิม** เช่น `sprites/thinking.png`
-3. รีเฟรชหน้าเว็บ — เสร็จ 🎉
+3. รัน `node tools/pixelate-sprites.js` เพื่อแปลงเป็นพิกเซลอาร์ตชุดเดียวกัน (ต้นฉบับเดิมจะถูกเก็บใน `sprites/original/`)
+4. รัน `node tools/make-icons.js` เพื่อสร้างไอคอนใหม่จาก `sprites/idle.png` (และ `node tools/pixelate-sleepy.js` ถ้าเปลี่ยนชีตหลับด้วย)
+5. รีเฟรชหน้าเว็บ — เสร็จ 🎉
+
+> ขนาดแสดงผลของหน้าเว็บคือ **192px (3×64)** และใส่ `image-rendering: pixelated` ไว้แล้ว
+> ถ้าใช้ภาพชุดใหม่ที่ยังเป็น 512 เท่าเดิม ขนาดก็ยังลงตัว
 
 > แอนิเมชันที่ฝังในไฟล์ SVG ตัว-original (หางส่าย, Zzz) จะหายไปเมื่อใช้ภาพ PNG
 > แต่แอนิเมชันระดับหน้าเว็บทั้งหมด (หายใจ, เงา, เดิน, เด้ง, นอน, น้ำหยด, ประกาย, หัวใจ, ลูบหัว)
@@ -289,7 +328,10 @@ garden.json         ← ข้อมูลรันไทม์: สวน (ง�
 set-status.js       ← คำสั่งเขียนสถานะจาก terminal
 demo.js             ← สคริปต์ทดสอบ สลับสถานะเองทุก 3 วินาที
 tests/              ← เทสต์หน่วย + เทสต์เบราว์เซอร์ headless (node --test ไม่ต้องลงอะไรเพิ่ม)
-sprites/            ← ภาพน้องส้ม 6 ท่า (png หลัก + svg สำรอง เปลี่ยนไฟล์ชื่อเดิมได้)
+sprites/            ← ภาพน้องส้ม 6 ท่า พิกเซลอาร์ต (png หลัก 512 + svg สำรอง)
+sprites/original/   ← ต้นฉบับ 512 ก่อนแปลง (สำรองไว้ให้รันตัวแปลงซ้ำได้)
+assets/             ← สไปรต์ชีตหลับ 2×2 (พิกเซล 1024) + assets/original/ ต้นฉบับ 1920
+tools/              ← สคริปต์แปลงภาพ (pixelate-sprites · pixelate-sleepy · make-icons + หน้าเทียบ compare-sprites.html)
 icons/              ← ไอคอนแอป (favicon / 192 / 512 / apple-touch) เจนจาก sprites/idle.png
 manifest.webmanifest← ข้อมูลแอปสำหรับติดตั้ง (ชื่อ, ไอคอน, สีพื้น)
 sw.js               ← service worker (แคชเปลือกแอป แต่ไม่แคช status.json)
@@ -420,7 +462,7 @@ finish something again and the garden turns green.
 
 ## 🧪 Tests
 
-Built-in `node:test` — nothing to install (26 tests):
+Built-in `node:test` — nothing to install (30 tests):
 
 ```bash
 node --test "tests/*.test.js"
@@ -429,6 +471,7 @@ node --test "tests/*.test.js"
 | File | Covers |
 |---|---|
 | `tests/set-status.test.js` | status writing, plant kinds, streak continuity/gaps, broken `garden.json`, `--ttl` clamping |
+| `tests/pixel-assets.test.js` | generated art: the six poses really are nearest ×8, binary alpha, one 24-colour palette · every icon pixel matches `sprites/idle.png` |
 | `tests/browser-smoke.test.js` | drives the **real page in headless Chrome/Edge**: every pose (sprite, bubble, pill), `ttlMinutes`, unknown status, garden rendering, ISO date yellowing, `aria-live`/`aria-pressed`, motion (breathing, drops, sparkles, hearts), click-to-pet, `prefers-reduced-motion`, `.png → .svg` fallback |
 
 Each test builds a throwaway copy of the site and serves it itself, so the real
@@ -488,14 +531,27 @@ into idle — Som switches to `assets/soms-garden-fat-lazy-cat-sleepy-spriteshee
 **immediately** when any other status arrives.
 
 - `6s steps(1, end)` — 1.5s per frame, each pose held then cut to the next (no fading)
-- Every frame is scaled and offset so the cat's height, bottom edge and horizontal centre match
-  `sprites/idle.png` inside the 170×150 box, and `clip-path` hides the neighbouring sheet frames
-- The art is smooth-edged (not hard pixel art), so **no** `image-rendering: pixelated`
+- The sheet is **pixel art from the same set as the six poses**: 4 frames of 512 each (64×64 ×8 nearest)
+  forming 1024; `background-size` is twice `--pet-size`, so one frame is exactly `--pet-size` wide
+  and no `clip-path` is needed any more
+- Every frame is placed so its **ground line and horizontal centre match `sprites/idle.png`**
+  (measured from each cat's alpha bounding box) — switching `idle` ↔ sleepy never makes the cat jump
+  (there is a test for it)
+- `image-rendering: pixelated`, like the regular poses
 - `prefers-reduced-motion: reduce` freezes the first frame
 - Flip it manually from DevTools: `window.somMode('sleepy')` / `window.somMode('normal')`
 
-> Replacing the sheet means recomputing `background-size`, `background-position` and `clip-path` for
-> all four frames (they are tied to each frame's alpha bounding box).
+The sheet converter lives in [`tools/pixelate-sleepy.js`](tools/pixelate-sleepy.js): it backs the
+original sheet up to `assets/original/`, splits the four frames, area-downscales them, forces alpha
+to 0/255, maps them onto the 24-colour palette **read back from `sprites/*.png`** (no new colours)
+and upscales nearest ×8.
+
+```bash
+node tools/pixelate-sleepy.js             # convert the sheet from assets/original (deterministic)
+```
+
+> Replacing the sheet yourself? Overwrite `assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png`
+> and run the converter above — no CSS edits needed, the geometry is aligned to `sprites/idle.png`.
 
 ### Tell Som which window you are in
 
@@ -510,9 +566,13 @@ node set-status.js done "done" fix --window "VS Code"    # a fragment is fine, c
 ```json
 {
   "window": "Codex",
-  "gardenUrl": "http://localhost:3000"
+  "gardenUrl": "http://localhost:3000",
+  "petSize": 192
 }
 ```
+
+- `petSize` sets the desktop pet's on-screen size and must be a whole multiple of 64
+  (64/128/192/256/320/384, default 192) so the pixel art stays crisp — restart `npm start` after changing it
 
 > 💻 Tested on **Windows** — finding/raising windows goes through PowerShell + Win32, so that part is
 > Windows-only (the window name is passed as a process argument, never spliced into a command string,
@@ -582,20 +642,42 @@ The install button only appears when the browser supports installing
 
 ## 🎨 Replacing the cat art
 
-Som is **AI-generated PNG art with a transparent background**, one file per pose in `sprites/`
-(the original SVGs stay as fallback — the page loads `.png` first and falls back to `.svg` when a PNG is missing)
+Every pose is **64×64 pixel art upscaled ×8 = 512×512** (transparent, binary alpha, uploaded as
+one file per pose in `sprites/`), with the pre-conversion 512 originals kept in `sprites/original/`
+(the original SVGs stay as fallback — the page loads `.png` first and falls back to `.svg` when a PNG is missing).
+The sleep sheet in `assets/` and the icons in `icons/` are generated from the same converters and
+share the same 24-colour palette.
 
 ```
 sprites/thinking.png   sprites/coding.png   sprites/success.png
 sprites/error.png      sprites/done.png     sprites/idle.png
-(+ sprites/*.svg  fallback files)
+sprites/original/*.png    ← untouched 512 originals (not loaded at runtime)
+(+ sprites/*.svg  vector fallback files)
+assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png  ← 2×2 sleep sheet (1024 pixel art)
+assets/original/…                                       ← untouched 1920 sheet
+icons/*.png                                             ← app icons, generated from sprites/idle.png
 ```
 
-Using your own AI-generated art? Just **overwrite the same file names** — no code changes:
+The converter lives in [`tools/pixelate-sprites.js`](tools/pixelate-sprites.js): area-downscale 512 → 64,
+one shared 24-colour palette for all six poses, alpha forced to 0/255, then nearest-neighbour ×8.
+Details that would otherwise vanish are repaired per pose in the script's `TOUCHUPS` / `KEEP_DETAILS`:
+the `idle` Zzz is redrawn, the blue `error` tears are kept from turning muddy and extended into a drip,
+and the `success` smile gets a 3-pixel mouth with a pink tongue — re-running is deterministic.
+
+```bash
+node tools/pixelate-sprites.js            # convert all six poses from sprites/original
+node tools/pixelate-sprites.js --help     # --size / --scale / --colors / --alpha
+node tools/pixelate-sleepy.js             # convert the 2×2 sleep sheet onto the same palette
+node tools/make-icons.js                  # rebuild every icon from sprites/idle.png
+```
+
+Using your own art? Just **overwrite the same file names** — no code changes:
 
 1. Generate Som in each pose (chubby round orange cat, big eyes, puffy cheeks, pastel tones)
 2. Remove the background so it is transparent (no white edge halo), then save with the **same file name** (e.g. `sprites/thinking.png`)
-3. Refresh — done 🎉
+3. Run `node tools/pixelate-sprites.js` so the whole set shares one pixel-art palette (the originals are backed up to `sprites/original/`)
+4. Run `node tools/make-icons.js` to rebuild the app icons from `sprites/idle.png` (plus `node tools/pixelate-sleepy.js` if you changed the sleep sheet)
+5. Refresh — done 🎉
 
 > Animations baked into the original SVG files (tail sway, Zzz) disappear with a replacement, but every
 > page-level motion (breathing, shadow, waddle, hop, water drops, sparkles, hearts, petting) is drawn in CSS

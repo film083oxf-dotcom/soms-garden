@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>น้องส้ม · before / after pixel art</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 20px;
+    font: 14px/1.45 system-ui, "Noto Sans Thai", sans-serif;
+    background: #f6f1e7;
+    color: #3e2e22;
+  }
+  h1 { margin: 0 0 4px; font-size: 20px; }
+  p { margin: 0 0 18px; opacity: .75; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+  .col { text-align: center; }
+  .col h2 { margin: 0 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: .06em; }
+  .shot {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 14px;
+    background:
+      linear-gradient(45deg, #e7ddcc 25%, transparent 25%, transparent 75%, #e7ddcc 75%) 0 0 / 16px 16px,
+      linear-gradient(45deg, #e7ddcc 25%, transparent 25%, transparent 75%, #e7ddcc 75%) 8px 8px / 16px 16px,
+      #fffdf8;
+    box-shadow: inset 0 0 0 1px rgba(90, 60, 30, .12);
+  }
+  .shot img { width: 100%; height: 100%; object-fit: contain; }
+  .before { image-rendering: auto; }
+  .after { image-rendering: pixelated; }
+  .zoom { margin-top: 8px; }
+  .caption { margin-top: 6px; font-size: 11px; opacity: .65; }
+  @media (max-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+  /* ชีตหลับ 2×2: เทียบทีละเฟรมด้วย background-position เปอร์เซ็นต์ */
+  .frame {
+    width: 100%;
+    aspect-ratio: 1;
+    background-repeat: no-repeat;
+    background-size: 200% 200%;
+  }
+  .frame.before { image-rendering: auto; }
+  .frame.after { image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<h1>ก่อน / หลัง — พิกเซลอาร์ต 64×64 (แสดงที่ 192px = 3×)</h1>
+<p>ซ้ายของแต่ละคู่ = ต้นฉบับ 512 (smooth) · ขวา = หลังแปลง 64×64 ×8 แล้วแสดงแบบ pixelated</p>
+<p>หมายเหตุ: ท่า <b>idle</b> มีการวาด Zzz ใหม่ด้วยพิกเซล 1px เพราะเส้นบางหายตอนย่อ 64px</p>
+<div class="grid" id="grid"></div>
+
+<h1 style="margin-top:28px">สไปรต์ชีตหลับ 2×2 (assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png)</h1>
+<p>ซ้าย = ต้นฉบับ 1920 (เก็บไว้ที่ assets/original/) · ขวา = หลังแปลงเป็นพิกเซลอาร์ต 1024 (เฟรมละ 512 = 64×64 ×8)</p>
+<div class="grid" id="sleepGrid"></div>
+
+<script>
+  // สไปรต์ชีตหลับ: 4 เฟรม เฟรมละ 25% — เทียบก่อน/หลังด้วย background-position
+  (function () {
+    var POS = ['0% 0%', '100% 0%', '0% 100%', '100% 100%'];
+    var LABEL = ['นอนขด', 'หาว', 'กลิ้ง', 'นอนหงาย'];
+    var SHEETS = {
+      before: '../assets/original/soms-garden-fat-lazy-cat-sleepy-spritesheet.png',
+      after: '../assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png',
+    };
+    var grid = document.getElementById('sleepGrid');
+    LABEL.forEach(function (label, i) {
+      var col = document.createElement('div');
+      col.className = 'col';
+      col.innerHTML =
+        '<h2>' + (i + 1) + '. ' + label + '</h2>' +
+        '<div class="frame before" style="background-image:url(' + SHEETS.before + ');background-position:' + POS[i] + '"></div>' +
+        '<div class="caption">ต้นฉบับ 1920</div>' +
+        '<div class="frame after" style="background-image:url(' + SHEETS.after + ');background-position:' + POS[i] + '"></div>' +
+        '<div class="caption">พิกเซล 1024 · เฟรมละ 512</div>';
+      grid.appendChild(col);
+    });
+  })();
+</script>
+
+<script>
+  var STATUSES = ['thinking', 'coding', 'success', 'error', 'done', 'idle'];
+  var grid = document.getElementById('grid');
+  STATUSES.forEach(function (s) {
+    var col = document.createElement('div');
+    col.className = 'col';
+    col.innerHTML =
+      '<h2>' + s + '</h2>' +
+      '<div class="shot"><img class="before" src="../sprites/original/' + s + '.png" alt="ก่อน ' + s + '"></div>' +
+      '<div class="caption">ต้นฉบับ</div>' +
+      '<div class="shot zoom"><img class="after" src="../sprites/' + s + '.png" alt="หลัง ' + s + '"></div>' +
+      '<div class="caption">พิกเซล 64×64 · แสดง 192px</div>';
+    grid.appendChild(col);
+  });
+</script>
+</body>
+</html>
