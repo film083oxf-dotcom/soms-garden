@@ -77,8 +77,20 @@
     }, 2200);
   }
 
+  /** สถานะไหนควรใช้ชุดท่าไหน — idle (รวมเคสเงียบเกิน ttl แล้ว lib/status.js คืน idle) = ง่วงนอน */
+  function modeForStatus(status) {
+    return status === 'idle' ? 'sleepy' : 'normal';
+  }
+
+  function setMode(mode) {
+    var m = mode === 'sleepy' ? 'sleepy' : 'normal';
+    rig.dataset.mode = m;
+    rig.classList.toggle('sleepy', m === 'sleepy');
+  }
+
   function applyState(s) {
     state = s;
+    setMode(modeForStatus(s.status));      // สลับชุดท่าอัตโนมัติตามสถานะจริง
     if (sprite.dataset.status !== s.status) {
       sprite.dataset.status = s.status;
       rig.dataset.status = s.status;
@@ -183,6 +195,9 @@
     if (rigX > maxX()) rigX = maxX();
   });
   showLine(lastLine);
+  setMode('normal');
+  // เปิดให้สลับชุดท่าจาก DevTools ได้ (window.som มาจาก contextBridge จึงเพิ่ม property ไม่ได้)
+  window.somMode = setMode;
   requestAnimationFrame(frame);
 
   /* ---------- ทักทาย main ครั้งแรก (ใช้ตรวจในโหมด smoke) ---------- */

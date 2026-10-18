@@ -54,7 +54,7 @@ node demo.js 1      # รันแค่ 1 รอบให้เห็นคร�
 | `success` | กระโดดตัวลอยนิดเดียวแล้วตกตุ้บ ดอกไม้บานรอบตัว 🎉 | เย้! ผ่านทุกอย่างแล้ว 🎉 |
 | `error` | นอนแผ่ ตาแบะ น้ำตาเม็ดเล็ก ๆ ใบไม้เหี่ยวชั่วคราว 😿 | แง... มีอะไรพังง่ะ 😿 |
 | `done` | ยืดเส้นยืดสาย แล้วนอนหงายท้องบนสนามหญ้า 😸 | เสร็จแล้ว! ขอพักเหนื่อยหน่อย 😸 |
-| `idle` | หลับ มี Zzz ลอย (ใช้เมื่อไม่อัปเดตเกิน 2 นาที) 😴 | ไม่มีใครอยู่เลย... ขอหลับก่อน Zzz 😴 |
+| `idle` | หลับ มี Zzz ลอย (ใช้เมื่อไม่อัปเดตเกิน 10 นาที) 😴 | ไม่มีใครอยู่เลย... ขอหลับก่อน Zzz 😴 |
 
 รูปแบบไฟล์:
 
@@ -112,7 +112,9 @@ node --test "tests/*.test.js"
 > 💡 เทสต์เบราว์เซอร์จะ **skip** (ไม่ใช่ pass) ถ้าเครื่องไม่มี Chrome/Edge
 > ตั้ง path เองได้ด้วย `CHROME_PATH="/path/to/chrome" node --test "tests/*.test.js"`
 >
-> 🖥️ เทสต์ของ desktop pet (ส่วนที่ไม่ใช้ GUI: จับคู่ชื่อหน้าต่าง/อ่านสถานะ/เมนู) รันแยก: `cd desktop && npm test`
+> 🖥️ เทสต์ของ desktop pet (ส่วนที่ไม่ใช้ GUI: จับคู่ชื่อหน้าต่าง/อ่านสถานะ/เมนู/สลับโหมดหลับ) รันแยก: `cd desktop && npm test`
+> — ชุด `renderer-mode.test.js` รัน `renderer.js` จริงใน sandbox DOM ปลอม แล้วยืนยันว่า idle → sleepy, สถานะอื่น → normal
+> และเช็กว่าไฟล์สไปรต์ชีตที่ CSS อ้างถึงมีอยู่จริง
 
 ## 🎬 ขยับได้ + ลูกเล่น
 
@@ -134,7 +136,8 @@ node --test "tests/*.test.js"
 
 เปิดน้องส้มเป็นหน้าต่าง **โปร่งใส ไร้กรอบ อยู่บนสุด ไม่ขึ้น taskbar** ขนาดเท่าพื้นที่ทำงานของจอหลัก
 คลิกทะลุได้ทุกจุด **ยกเว้นตัวน้องส้มกับฟองคำพูด** และเดินไปมาตามขอบล่างจอเหนือ taskbar
-โดยอ่าน `status.json` ทุก 1 วินาทีด้วยกติกาเดียวกับหน้าเว็บทุกประการ (กติกาหลับ, `ttlMinutes`, ภาพ `sprites/` ชุดเดียวกัน — ไม่มีไฟล์รูปเพิ่ม)
+โดยอ่าน `status.json` ทุก 1 วินาทีด้วยกติกาเดียวกับหน้าเว็บทุกประการ (กติกาหลับ, `ttlMinutes`, ภาพ `sprites/` ชุดเดียวกัน)
+เพิ่มเฉพาะโหมดหลับที่ใช้สไปรต์ชีต 4 เฟรมใน `assets/` (ดูหัวข้อถัดไป)
 
 ```bash
 cd desktop
@@ -148,9 +151,25 @@ npm start
 | คลิกน้องส้ม | ดึงหน้าต่างเอเจนต์ (ชื่อจาก field `window` ใน `status.json`) ขึ้นหน้าสุด — ย่ออยู่จะ restore ให้; หาไม่เจอ/ดึงไม่ขึ้น น้องส้มจะบอกในฟอง ไม่แครช |
 | คลิกขวาที่น้องส้ม | เมนู **ไปหน้าต่างเอเจนต์** · **เปิดหน้าสวน** (เปิด `gardenUrl` จาก `soms.config.json`, ค่าเริ่มต้น `http://localhost:3000`) · **ปิดน้องส้ม** |
 
-ท่าทางใช้ภาพ PNG เดิมทั้งหมด (ทำท่าเดินด้วย CSS/JS ไม่มีสไปรต์เฟรมใหม่):
+ท่าปกติใช้ภาพ PNG เดิมทั้งหมด (ทำท่าเดินด้วย CSS/JS ไม่มีสไปรต์เฟรมใหม่):
 `coding` เดินไปมาตัวเด้งเอียงตามจังหวะก้าว พลิกภาพตามทิศทาง เปลี่ยนทิศที่ขอบหรือหยุดสั้น ๆ · `thinking` นั่งนิ่ง
-`success` กระโดดหนึ่งครั้ง · `error` นอนแผ่ · `done` นอนหงายท้อง · `idle` หลับ — และ **เคารพ `prefers-reduced-motion`**
+`success` กระโดดหนึ่งครั้ง · `error` นอนแผ่ · `done` นอนหงายท้อง — และ **เคารพ `prefers-reduced-motion`**
+
+### 😴 โหมดน้องแมวง่วงนอน (เฉพาะ desktop pet)
+
+เมื่อสถานะเป็น `idle` — **รวมกรณีเงียบเกิน `ttlMinutes`** จน `lib/status.js` ตัดสินเป็น idle —
+น้องส้มจะสลับไปใช้สไปรต์ชีต `assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png`
+(ตาราง 2×2 = 4 เฟรม: นอนขด · หาว · กลิ้ง · นอนหงาย) และกลับมาท่าปกติ **ทันที** ที่มีสถานะอื่นเข้ามา
+
+- อนิเมชัน `6s steps(1, end)` — เฟรมละ 1.5 วินาที ค้างท่าไว้แล้วตัดไปเฟรมถัดไป (ไม่ใช่การ fade)
+- ขนาด/ตำแหน่งของแมวในทุกเฟรมถูกคำนวณให้ความสูง ขอบล่าง และจุดกึ่งกลางตรงกับ `sprites/idle.png`
+  ตอนแสดงในกล่อง 170×150 และใช้ `clip-path` ตัดไม่ให้เฟรมข้างเคียงโผล่
+- ภาพชุดนี้เป็นงานวาดขอบเนียน (ไม่ใช่พิกเซลอาร์ต) จึง **ไม่ใช้** `image-rendering: pixelated`
+- `prefers-reduced-motion: reduce` → หยุดที่เฟรมแรก (ไม่มีอนิเมชัน)
+- สลับเองชั่วคราวได้จาก DevTools: `window.somMode('sleepy')` / `window.somMode('normal')`
+
+> ถ้าเปลี่ยนไฟล์สไปรต์ชีต ต้องคำนวณค่า `background-size`, `background-position` และ `clip-path` ของทั้ง 4 เฟรมใหม่
+> (ค่าเหล่านี้ผูกกับ bounding box ของแมวในแต่ละเฟรม)
 
 ### ตั้งชื่อหน้าต่างให้น้องส้มรู้ว่าเอเจนต์อยู่ตรงไหน
 
@@ -339,7 +358,7 @@ if your tasks run longer.
 | `success` | little hop, lands with a plop, flowers bloom around 🎉 | "yay! everything passed 🎉" |
 | `error` | lies sprawled, wide eyes, tiny tears, leaves wilt briefly 😿 | "oh no... it broke 😿" |
 | `done` | stretches, then lies belly-up on the grass 😸 | "all done! nap time 😸" |
-| `idle` | asleep with floating Zzz (auto after 2 min of silence) 😴 | "nobody's here... Zzz 😴" |
+| `idle` | asleep with floating Zzz (auto after 10 min of silence) 😴 | "nobody's here... Zzz 😴" |
 
 File format:
 
@@ -431,7 +450,8 @@ Som's art is static PNG, but the page adds life with pure CSS — no art edits n
 Som as a **transparent, frameless, always-on-top** window with no taskbar entry, sized to your
 primary display's work area. The whole window is click-through **except Som and the speech bubble**,
 and Som waddles along the bottom edge above the taskbar. It polls `status.json` every second with the
-exact same rules as the web page (sleep timer, `ttlMinutes`, the same `sprites/` files — no new art).
+exact same rules as the web page (sleep timer, `ttlMinutes`, the same `sprites/` files), plus one
+extra 4-frame sleep sprite sheet in `assets/` (see below).
 
 ```bash
 cd desktop
@@ -445,10 +465,27 @@ npm start
 | Click Som | Brings the agent's window (the `window` field in `status.json`) to the front — restores it when minimized; if it can't be found or raised, Som says so in the bubble instead of crashing |
 | Right-click Som | Menu: **go to the agent window** · **open the garden** (`gardenUrl` from `soms.config.json`, default `http://localhost:3000`) · **quit Som** |
 
-All poses reuse the existing PNGs (the walk is pure CSS/JS, no new sprite frames):
+Regular poses reuse the existing PNGs (the walk is pure CSS/JS, no new sprite frames):
 `coding` walks with a per-step bob and tilt, flips with direction, turns at edges or pauses briefly ·
-`thinking` sits still · `success` hops once · `error` sprawls · `done` lies belly-up · `idle` sleeps —
-and `prefers-reduced-motion` is respected.
+`thinking` sits still · `success` hops once · `error` sprawls · `done` lies belly-up — and
+`prefers-reduced-motion` is respected.
+
+### 😴 Sleepy mode (desktop pet only)
+
+When the status is `idle` — **including going quiet past `ttlMinutes`**, when `lib/status.js` turns it
+into idle — Som switches to `assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png`
+(a 2×2 sheet: curled up · yawning · rolling · belly-up) and switches back to the regular pose
+**immediately** when any other status arrives.
+
+- `6s steps(1, end)` — 1.5s per frame, each pose held then cut to the next (no fading)
+- Every frame is scaled and offset so the cat's height, bottom edge and horizontal centre match
+  `sprites/idle.png` inside the 170×150 box, and `clip-path` hides the neighbouring sheet frames
+- The art is smooth-edged (not hard pixel art), so **no** `image-rendering: pixelated`
+- `prefers-reduced-motion: reduce` freezes the first frame
+- Flip it manually from DevTools: `window.somMode('sleepy')` / `window.somMode('normal')`
+
+> Replacing the sheet means recomputing `background-size`, `background-position` and `clip-path` for
+> all four frames (they are tied to each frame's alpha bounding box).
 
 ### Tell Som which window you are in
 
