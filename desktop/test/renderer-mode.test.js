@@ -18,6 +18,7 @@ const RENDERER = path.join(__dirname, '..', 'renderer', 'renderer.js');
 const HTML = path.join(__dirname, '..', 'renderer', 'index.html');
 const ROOT = path.join(__dirname, '..', '..');
 const { decodePng, STATUSES } = require(path.join(ROOT, 'tools', 'pixelate-sprites.js'));
+const { catBox } = require(path.join(ROOT, 'tools', 'pixelate-sleepy.js'));
 const NOW = Date.parse('2026-10-18T12:00:00.000Z');
 const ago = (ms) => new Date(NOW - ms).toISOString();
 
@@ -258,6 +259,37 @@ test('สไปรต์ชีตหลับ: alpha 0/255, ใช้ 24 สี�
     // และอยู่กลางกล่อง (จุดกึ่งกลางห่างจากกลางกล่องไม่เกิน 1 พิกเซลอาร์ต)
     assert.ok(Math.abs((left + right) / 2 / 8 - 32) <= 1, `เฟรม ${index + 1} อยู่กลางกล่อง`);
   }
+});
+
+test('สไปรต์ชีตหลับ: ตัวแมวสูงเท่ากันทุกเฟรม (วัดเฉพาะตัวแมว ไม่นับ Zzz / เอฟเฟกต์ลอย)', () => {
+  const html = fs.readFileSync(HTML, 'utf8');
+  const m = html.match(/background-image:\s*url\("([^"]+)"\)/);
+  const sheet = decodePng(path.resolve(path.dirname(HTML), m[1]));
+  const cell = sheet.width / 2;
+  const unit = cell / 64;                    // 512 = 64×8
+
+  const bodies = [];
+  for (let index = 0; index < 4; index++) {
+    const data = Buffer.alloc(cell * cell * 4);
+    const fx = index % 2;
+    const fy = Math.floor(index / 2);
+    for (let y = 0; y < cell; y++) {
+      const from = ((fy * cell + y) * sheet.width + fx * cell) * 4;
+      sheet.data.copy(data, y * cell * 4, from, from + cell * 4);
+    }
+    const body = catBox({ width: cell, height: cell, data }, 128);
+    assert.ok(body, `เฟรม ${index + 1} ต้องมีตัวแมว`);
+    bodies.push(body);
+  }
+
+  const heights = bodies.map((b) => (b.y1 - b.y0 + 1) / unit);
+  const bottoms = bodies.map((b) => b.y1 / unit);
+  const centers = bodies.map((b) => ((b.x0 + b.x1) / 2) / unit);
+  const spread = (a) => Math.max(...a) - Math.min(...a);
+
+  assert.ok(spread(heights) <= 1, 'ความสูงตัวแมวต้องเท่ากันทุกเฟรม (สเกลต่อเฟรมจากความสูงคงที่): ' + heights.join(', '));
+  assert.ok(spread(bottoms) <= 1, 'เส้นพื้นต้องตรงกันทุกเฟรม: ' + bottoms.join(', '));
+  assert.ok(spread(centers) <= 1, 'จุดกึ่งกลางต้องตรงกันทุกเฟรม: ' + centers.join(', '));
 });
 
 /** แถวล่างสุดที่มีพิกเซลทึบของภาพ */

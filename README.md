@@ -171,6 +171,7 @@ npm start
 - ชีตเป็น **พิกเซลอาร์ตชุดเดียวกับ 6 ท่าหลัก**: 4 เฟรม เฟรมละ 512 (= 64×64 ×8 nearest) รวมเป็น 1024
   `background-size` = 2 เท่าของ `--pet-size` → 1 เฟรม = `--pet-size` พอดี จึงไม่ต้องใช้ `clip-path` แล้ว
 - ทุกเฟรมถูกวางให้ **เส้นพื้นและจุดกึ่งกลางตรงกับ `sprites/idle.png`** (วัดจาก bounding box ของแมว)
+  และสเกลต่อเฟรมคำนวณจาก **ความสูงตัวแมวล้วน** (ไม่นับ Zzz / เส้นเอฟเฟกต์ลอย) → ตัวแมวสูงเท่ากันทุกเฟรม
   → สลับ `idle` ↔ โหมดหลับแล้วตัวน้องไม่กระโดด (มีเทสต์ยืนยันไว้)
 - ใช้ `image-rendering: pixelated` เหมือนสไปรต์ท่าปกติ
 - `prefers-reduced-motion: reduce` → หยุดที่เฟรมแรก (ไม่มีอนิเมชัน)
@@ -535,8 +536,9 @@ into idle — Som switches to `assets/soms-garden-fat-lazy-cat-sleepy-spriteshee
   forming 1024; `background-size` is twice `--pet-size`, so one frame is exactly `--pet-size` wide
   and no `clip-path` is needed any more
 - Every frame is placed so its **ground line and horizontal centre match `sprites/idle.png`**
-  (measured from each cat's alpha bounding box) — switching `idle` ↔ sleepy never makes the cat jump
-  (there is a test for it)
+  (measured from each cat's alpha bounding box), and each frame's scale comes from the **cat's body
+  height alone** (Zzz and floating motion marks excluded), so the cat is the same height in every
+  frame — switching `idle` ↔ sleepy never makes the cat jump (there is a test for it)
 - `image-rendering: pixelated`, like the regular poses
 - `prefers-reduced-motion: reduce` freezes the first frame
 - Flip it manually from DevTools: `window.somMode('sleepy')` / `window.somMode('normal')`

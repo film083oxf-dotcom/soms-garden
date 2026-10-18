@@ -9,8 +9,9 @@
  * ขั้นตอน:
  *  1. สำรองต้นฉบับไป assets/original/ (ถ้ามีแล้วใช้ไฟล์นั้นเป็นต้นฉบับ — รันซ้ำได้)
  *  2. แยก 4 เฟรมตามลำดับอ่าน (บนซ้าย → บนขวา → ล่างซ้าย → ล่างขวา)
- *  3. ครอบเฉพาะตัวแมว (bbox จาก alpha) แล้วย่อด้วย area filter แบบ premultiplied alpha
- *     ให้ได้สัดส่วนเดียวกันทุกเฟรม (ตัวคูณชุดเดียว) ขนาดสูงสุด 56×46 พิกเซล
+ *  3. ย่อภาพทั้งกรอบด้วย area filter แบบ premultiplied alpha โดยสเกลต่อเฟรมคำนวณจาก
+ *     "ความสูงตัวแมวคงที่" ที่วัดจากคอมโพเนนต์ใหญ่สุด (ไม่นับ Zzz / เส้นเคลื่อนไหวลอย)
+ *     → ตัวแมวสูงเท่ากันทุกเฟรม สัดส่วนของแต่ละท่าคงเดิม ความกว้างไม่เกิน 56 พิกเซล
  *  4. วางบนผืน 64×64 โดยให้ "เส้นพื้น" และ "จุดกึ่งกลาง" ตรงกับ sprites/idle.png
  *     → สลับ idle ↔ sleepy แล้วตัวแมวไม่กระโดด
  *  5. alpha เป็น 0/255 (ตัดที่ --alpha) แล้ว map เข้าพาเลตต์ 24 สีที่อ่านมาจาก sprites/*.png
@@ -49,6 +50,60 @@ function parseArgs(argv) {
     process.exit(1);
   }
   return opts;
+}
+
+/**
+ * bbox ของ "ตัวแมวล้วน ๆ " — คอมโพเนนต์ที่ใหญ่ที่สุด (เชื่อม 8 ทิศ)
+ *
+ * แต่ละเฟรมมีวัตถุลอยที่ไม่ใช่ตัวแมวปนอยู่: Zzz ของเฟรมนอนขด, เส้นเคลื่อนไหวของเฟรมกลิ้ง
+ * ถ้าเอา bbox รวมพวกนี้ สเกลของเฟรมจะถูก "ดัน" ตามของลอย ทำให้ตัวแมวเล็ก/ใหญ่ไม่เท่ากัน
+ * ตัวแมวเป็นก้อนเดียวที่ใหญ่กว่าของลอยเสมอ (เช็คแล้วทั้ง 4 เฟรม) จึงใช้ก้อนใหญ่สุดเป็นเส้นอ้างอิง
+ *
+ * คืน null ถ้าภาพโปร่งใสทั้งหมด
+ */
+function catBox(img, threshold) {
+  const { width: w, height: h, data } = img;
+  const seen = new Uint8Array(w * h);
+  const stack = new Int32Array(w * h);
+  let best = null;
+  for (let start = 0; start < w * h; start++) {
+    if (seen[start] || data[start * 4 + 3] < threshold) continue;
+    let top = 0;
+    stack[top++] = start;
+    seen[start] = 1;
+    let count = 0;
+    let x0 = w;
+    let y0 = h;
+    let x1 = -1;
+    let y1 = -1;
+    while (top > 0) {
+      const p = stack[--top];
+      count++;
+      const px = p % w;
+      const py = (p / w) | 0;
+      if (px < x0) x0 = px;
+      if (py < y0) y0 = py;
+      if (px > x1) x1 = px;
+      if (py > y1) y1 = py;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (!dx && !dy) continue;
+          const nx = px + dx;
+          const ny = py + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const q = ny * w + nx;
+          if (!seen[q] && data[q * 4 + 3] >= threshold) {
+            seen[q] = 1;
+            stack[top++] = q;
+          }
+        }
+      }
+    }
+    if (!best || count > best.count) {
+      best = { count, x0, y0, x1, y1, width: x1 - x0 + 1, height: y1 - y0 + 1 };
+    }
+  }
+  return best;
 }
 
 /** bbox ของพิกเซลที่ alpha ≥ threshold (คืน null ถ้าโปร่งใสทั้งภาพ) */
@@ -183,16 +238,18 @@ function main() {
         sheet.data.copy(data, y * fw * 4, from, from + fw * 4);
       }
       const img = { width: fw, height: fh, data };
-      const box = contentBox(img, opts.alpha);
-      if (!box) throw new Error(`เฟรม ${fy * 2 + fx + 1} โปร่งใสทั้งภาพ`);
-      frames.push({ img, box });
+      const box = contentBox(img, opts.alpha);        // กรอบรวม Zzz/ของลอย — ใช้ตอนครอบก่อนย่อ
+      const body = catBox(img, opts.alpha);           // ตัวแมวล้วน — ใช้ตอนคิดสเกล/จัดตำแหน่ง
+      if (!box || !body) throw new Error(`เฟรม ${fy * 2 + fx + 1} โปร่งใสทั้งภาพ`);
+      frames.push({ img, box, body });
     }
   }
 
-  // ตัวคูณชุดเดียวทุกเฟรม → ขนาดตัวแมวคงที่ ไม่เด้งscale ตอนเปลี่ยนเฟรม
-  const scale = Math.min(
-    maxW / Math.max(...frames.map((f) => f.box.width)),
-    maxH / Math.max(...frames.map((f) => f.box.height)),
+  /* สเกลต่อเฟรม: ทำให้ "ความสูงตัวแมว" เท่ากันทุกเฟรม (วัดจากตัวแมวล้วน ไม่นับ Zzz/ของลอย)
+     โดยเลือกความสูงที่สูงสุดที่ยังไม่เกินสองเงื่อนไข: ไม่เกินความกว้าง maxW และไม่เกิน maxH (เท่า idle) */
+  const targetH = Math.max(
+    1,
+    Math.min(maxH, Math.floor(Math.min(...frames.map((f) => (maxW * f.body.height) / f.body.width)))),
   );
 
   const palette = sharedPalette();
@@ -202,16 +259,26 @@ function main() {
   const out = Buffer.alloc(cell * 2 * cell * 2 * 4);
 
   frames.forEach((frame, index) => {
-    const dw = Math.max(1, Math.round(frame.box.width * scale));
-    const dh = Math.max(1, Math.round(frame.box.height * scale));
-    const resampled = areaResample(crop(frame.img, frame.box), dw, dh);
+    // สเกลเฉพาะเฟรม จากความสูงตัวแมวคงที่ (targetH) — สัดส่วนเดิมถูกเก็บไว้ทุกแกน
+    const s = targetH / frame.body.height;
+    const dh = targetH;                                   // ความสูงตัวแมวเท่ากันทุกเฟรม
+    const dw = Math.min(maxW, Math.round(frame.body.width * s));
+    const rw = Math.max(1, Math.round(frame.box.width * s));   // กรอบทั้งเฟรม (รวม Zzz/ของลอย)
+    const rh = Math.max(1, Math.round(frame.box.height * s));
+    const resampled = areaResample(crop(frame.img, frame.box), rw, rh);
+
+    // ตำแหน่งตัวแมวในกรอบต้นฉบับ → หลังย่อ → แล้ววางให้เส้นพื้น/กึ่งกลางตรงกับ idle
+    const bodyLeft = Math.round((frame.body.x0 - frame.box.x0) * s);
+    const bodyTop = Math.round((frame.body.y0 - frame.box.y0) * s);
+    const ox = Math.round(centerX - dw / 2) - bodyLeft;
+    const oy = bottom - dh + 1 - bodyTop;
 
     const px = Buffer.alloc(opts.size * opts.size * 4);
     const cache = new Map();
     let opaque = 0;
-    for (let y = 0; y < dh; y++) {
-      for (let x = 0; x < dw; x++) {
-        const i = (y * dw + x) * 4;
+    for (let y = 0; y < rh; y++) {
+      for (let x = 0; x < rw; x++) {
+        const i = (y * rw + x) * 4;
         if (resampled[i + 3] < opts.alpha) continue;       // alpha 0/255 เท่านั้น
         const c = nearestColor(
           Math.round(resampled[i]),
@@ -220,10 +287,10 @@ function main() {
           palette,
           cache,
         );
-        const ox = Math.round(centerX - dw / 2);
-        const oy = bottom - dh + 1;
-        if (x + ox < 0 || y + oy < 0 || x + ox >= opts.size || y + oy >= opts.size) continue;
-        const o = ((oy + y) * opts.size + ox + x) * 4;
+        const px1 = x + ox;
+        const py1 = y + oy;
+        if (px1 < 0 || py1 < 0 || px1 >= opts.size || py1 >= opts.size) continue;
+        const o = (py1 * opts.size + px1) * 4;
         px[o] = c[0];
         px[o + 1] = c[1];
         px[o + 2] = c[2];
@@ -251,15 +318,15 @@ function main() {
       if (px[i + 3] === 255) used.add((px[i] << 16) | (px[i + 1] << 8) | px[i + 2]);
     }
     console.log(
-      `✅ เฟรม ${index + 1} → ${dw}×${dh} @ (${Math.round(centerX - dw / 2)}, ${bottom - dh + 1})` +
-      ` · ${opaque} พิกเซลทึบ · ใช้ ${used.size} สี`,
+      `✅ เฟรม ${index + 1} → ตัวแมว ${dw}×${dh} @ (${Math.round(centerX - dw / 2)}, ${bottom - dh + 1})` +
+      ` · ภาพที่วาง ${rw}×${rh} · ${opaque} พิกเซลทึบ · ใช้ ${used.size} สี`,
     );
   });
 
   fs.writeFileSync(SHEET, encodePng(cell * 2, cell * 2, out));
-  console.log(`🎉 ${path.relative(ROOT, SHEET)} → ${cell * 2}×${cell * 2} (4 เฟรม ${cell}×${cell} · พื้น y=${bottom} · กลาง x=${centerX})`);
+  console.log(`🎉 ${path.relative(ROOT, SHEET)} → ${cell * 2}×${cell * 2} (4 เฟรม ${cell}×${cell} · สูงตัวแมวคงที่ ${targetH}px · พื้น y=${bottom} · กลาง x=${centerX})`);
 }
 
 if (require.main === module) main();
 
-module.exports = { contentBox, crop, areaResample, sharedPalette };
+module.exports = { contentBox, catBox, crop, areaResample, sharedPalette };
