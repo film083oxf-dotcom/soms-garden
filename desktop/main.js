@@ -68,7 +68,10 @@ function createWindow() {
 
   win.setAlwaysOnTop(true, 'screen-saver');
   win.setIgnoreMouseEvents(true, { forward: true });   // ทะลุหมดก่อน — renderer เปิดรับเฉพาะตอนชี้ที่ตัวน้อง
-  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  // ส่งขนาดตัว (จำนวนเท่าของ 64) จาก soms.config.json ให้ renderer ตั้ง CSS var
+  win.loadFile(path.join(__dirname, 'renderer', 'index.html'), {
+    query: { petSize: String(CONFIG.petSize) },
+  });
   win.once('ready-to-show', () => win.showInactive()); // เปิดแบบไม่กระโดดทับแอปอื่น
 
   // renderer เพิ่งโหลดเสร็จ → ส่งสถานะปัจจุบันให้ทันที (ไม่งั้นจะค้างท่า idle

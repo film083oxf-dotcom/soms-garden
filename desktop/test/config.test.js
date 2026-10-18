@@ -10,7 +10,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { readConfig, DEFAULTS } = require('../lib/config.js');
+const { readConfig, normalizePetSize, DEFAULTS } = require('../lib/config.js');
 const { buildMenuTemplate } = require('../lib/menu.js');
 
 const tempDirs = [];
@@ -27,7 +27,20 @@ function writeConfig(content) {
 
 test('ไม่มีไฟล์ config → ค่าเริ่มต้น', () => {
   const cfg = readConfig(path.join(os.tmpdir(), 'som-config-missing-' + Date.now() + '.json'));
-  assert.deepEqual(cfg, { window: '', gardenUrl: 'http://localhost:3000' });
+  assert.deepEqual(cfg, { window: '', gardenUrl: 'http://localhost:3000', petSize: 192 });
+});
+
+test('petSize: รับเฉพาะจำนวนเต็มเท่าของ 64 ในช่วง 64–384 (กันพิกเซลเบี้ยว)', () => {
+  assert.equal(readConfig(writeConfig({ petSize: 256 })).petSize, 256);
+  assert.equal(readConfig(writeConfig({ petSize: 64 })).petSize, 64);
+  assert.equal(readConfig(writeConfig({ petSize: 384 })).petSize, 384);
+
+  for (const bad of [100, 200, 0, -64, 448, 191, 64.5, '192', null, true, undefined]) {
+    assert.equal(readConfig(writeConfig({ petSize: bad })).petSize, DEFAULTS.petSize, 'ปฏิเสธ ' + JSON.stringify(bad));
+  }
+
+  assert.equal(normalizePetSize(192), 192);
+  assert.equal(normalizePetSize('192'), null);
 });
 
 test('อ่าน window + gardenUrl ได้และตัดช่องว่าง', () => {

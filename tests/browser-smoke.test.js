@@ -68,6 +68,8 @@ const PROBE = `
       pill: document.getElementById('statusPill').textContent,
       sprite: s.getAttribute('src'),
       spriteLoaded: s.naturalWidth,
+      spriteCssW: parseFloat(getComputedStyle(s).width),
+      imageRendering: getComputedStyle(s).imageRendering,
       fellBack: s.dataset.fb === '1',
       plantCount: document.getElementById('plantCount').textContent,
       streak: document.getElementById('streak').textContent,
@@ -146,7 +148,9 @@ function makeSite() {
   fs.mkdirSync(path.join(dir, 'icons'));
 
   for (const f of fs.readdirSync(path.join(ROOT, 'sprites'))) {
-    fs.copyFileSync(path.join(ROOT, 'sprites', f), path.join(dir, 'sprites', f));
+    const from = path.join(ROOT, 'sprites', f);
+    if (!fs.statSync(from).isFile()) continue;   // ข้าม sprites/original (ไฟล์ต้นฉบับสำรอง)
+    fs.copyFileSync(from, path.join(dir, 'sprites', f));
   }
   for (const f of fs.readdirSync(path.join(ROOT, 'icons'))) {
     fs.copyFileSync(path.join(ROOT, 'icons', f), path.join(dir, 'icons', f));
@@ -282,6 +286,16 @@ test('browser smoke: หน้าเว็บจริงใน Chrome headless'
     assert.match(page.hint, /ยังไม่เจอ status\.json/);
     assert.equal(page.plantNodes, 0, 'ยังไม่มีสวนก็ต้องไม่พัง');
     assert.equal(page.spriteLoaded, 512, 'ยังต้องแสดงภาพน้องส้มได้');
+  });
+
+  await t.test('ขนาดแสดงผลเป็นจำนวนเท่าของ 64 และใช้ image-rendering: pixelated', async () => {
+    writeSite(site, { status: 'coding', message: 'พิกเซลอาร์ต', updatedAt: new Date().toISOString() }, null);
+    const { page } = await readPage(origin, profile, dumpFile);
+
+    assert.equal(page.spriteCssW, 192, 'แสดงผล 192px = 3×64');
+    assert.equal(page.spriteCssW % 64, 0, 'ต้องเป็นจำนวนเท่าของ 64');
+    assert.equal(page.imageRendering, 'pixelated');
+    assert.equal(page.spriteLoaded, 512, 'ภาพต้นทางยังเป็น 512 (64×8)');
   });
 
   await t.test('ทุกท่า: ภาพ/ฟองคำพูด/ป้ายสถานะตรงกับ status.json', async () => {

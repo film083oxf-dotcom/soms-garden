@@ -21,6 +21,20 @@
   var bubble = document.getElementById('bubble');
   var bubbleText = document.getElementById('bubbleText');
 
+  /* ---------- ขนาดตัวจาก soms.config.json ----------
+     main ส่งมาเป็น ?petSize=<px> (จำนวนเท่าของ 64) จึงตั้ง --pet-size ให้ CSS ทั้งชุด
+     ถ้าค่าไม่ถูกต้อง (ไม่ใช่จำนวนเท่าของ 64 / เกินช่วง) จะใช้ค่าเริ่มต้น 192px ใน CSS */
+  (function applyPetSize() {
+    var search = window.location && window.location.search ? String(window.location.search) : '';
+    var m = /[?&]petSize=(\d+)/.exec(search);
+    if (!m) return;
+    var n = Number(m[1]);
+    if (n >= 64 && n <= 384 && n % 64 === 0) {
+      document.documentElement.style.setProperty('--pet-size', n + 'px');
+      document.documentElement.dataset.petSize = String(n);
+    }
+  })();
+
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   var SPEED = 46;                       // ความเร็วเดิน (px/วินาที)
 

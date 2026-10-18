@@ -203,8 +203,9 @@
   .pet {
     position: relative;
     z-index: 3;
-    width: 220px;
-    height: 200px;
+    /* 192 = 3×64 ของพิกเซลอาร์ต 64×64 (แต่ละพิกเซล = 3px พอดี) */
+    width: 192px;
+    height: 192px;
     max-width: 78%;
     max-height: 46%;
     display: flex;
@@ -237,9 +238,9 @@
     position: absolute;
     left: 50%;
     bottom: 2px;
-    width: 132px;
-    height: 18px;
-    margin-left: -66px;
+    width: 116px;
+    height: 16px;
+    margin-left: -58px;
     border-radius: 50%;
     background: radial-gradient(closest-side, rgba(90, 60, 30, .24), rgba(90, 60, 30, 0));
     z-index: 1;
@@ -262,6 +263,8 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    /* ภาพ 512 = พิกเซลอาร์ต 64×64 ×8 → ขยายแสดงเป็นจำนวนเท่าเต็มของ 64 เสมอ */
+    image-rendering: pixelated;
     user-select: none;
     -webkit-user-drag: none;
   }
@@ -394,7 +397,7 @@
   }
 
   @media (max-height: 520px) {
-    .pet { width: 170px; height: 155px; }
+    .pet { width: 128px; height: 128px; }   /* 2×64 */
     .scene { padding-bottom: 48px; }
     .ground { height: 76px; }
   }

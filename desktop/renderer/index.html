@@ -8,6 +8,12 @@
       content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file:; connect-src 'none'">
 <style>
   * { box-sizing: border-box; }
+
+  /* ขนาดตัวน้องส้มเป็นจำนวนเท่าของ 64 เพื่อไม่ให้พิกเซลอาร์ตเบี้ยว
+     main.js ส่งค่าจาก soms.config.json (คีย์ petSize) มาทับให้ได้ — ค่าเริ่มต้น 192 = 3×64 */
+  :root {
+    --pet-size: 192px;
+  }
   html, body {
     margin: 0;
     width: 100%;
@@ -24,16 +30,16 @@
     position: absolute;
     left: 0;
     bottom: 8px;
-    width: 170px;
-    height: 150px;
+    width: var(--pet-size);
+    height: var(--pet-size);
     pointer-events: none;                 /* เฉพาะตัวน้องกับฟองเท่านั้นที่รับคลิก */
   }
   #pet {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 170px;
-    height: 150px;
+    width: var(--pet-size);
+    height: var(--pet-size);
     cursor: pointer;
     pointer-events: auto;
     transform-origin: 50% 100%;           /* พลิกซ้าย-ขวาโดยไม่ให้ลอย */
@@ -43,6 +49,8 @@
     height: 100%;
     object-fit: contain;
     display: block;
+    /* สไปรต์ 512 = พิกเซลอาร์ต 64×64 ×8 → แสดงที่ 192 (3×64) แต่ละพิกเซล = 3px พอดี */
+    image-rendering: pixelated;
     -webkit-user-drag: none;
     transform-origin: 50% 100%;
   }
@@ -97,24 +105,23 @@
     border-bottom: 0;
   }
 
-  /* โหมด "น้องแมวง่วงนอน" — CSS sprite sheet 2×2 (4 เฟรม · เฟรมละ 1.5s = 6s/รอบ)
-     ภาพนี้เป็นงานวาดขอบเนียน (~142k สี) ไม่ใช่พิกเซลฮาร์ดเอดจ์ จึงไม่ใช้ image-rendering: pixelated
-     ค่า background-size/position ของแต่ละเฟรมคำนวณจาก bounding box ของแมวในเฟรมนั้น
-     ให้ความสูง ขอบล่าง และจุดกึ่งกลางตรงกับ sprites/idle.png ตอนแสดงในกล่อง 170×150 */
+  /* โหมด "น้องแมวง่วงนอน" — สไปรต์ชีตพิกเซลอาร์ต 2×2 (4 เฟรม · เฟรมละ 1.5s = 6s/รอบ)
+     ชีต 1024 = 4 เฟรม เฟรมละ 512 (= พิกเซลอาร์ต 64×64 ×8 nearest) เท่าชุดท่าหลักเป๊ะ ๆ
+     แต่ละเฟรมวางตัวโดยให้เส้นพื้นและจุดกึ่งกลางตรงกับ sprites/idle.png → สลับแล้วไม่กระโดด
+     background-size = 2 เท่าของกล่อง → 1 เฟรม = var(--pet-size) พอดี (พิกเซลละ 3px ที่ 192) */
   #sleepSprite {
     display: none;
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 170px;
-    height: 150px;
+    width: var(--pet-size);
+    height: var(--pet-size);
     background-image: url("../../assets/soms-garden-fat-lazy-cat-sleepy-spritesheet.png");
     background-repeat: no-repeat;
+    background-size: calc(var(--pet-size) * 2) calc(var(--pet-size) * 2);
     /* เฟรม 1 (บนซ้าย) — ค่าเดียวกับ 0% ด้านล่าง ใช้ตอน prefers-reduced-motion */
-    background-size: 300.06px 300.06px;
-    background-position: 6.31px -8.27px;
-    /* ตัดเฉพาะพื้นที่เฟรมตัวเอง ไม่ให้เฟรมข้างเคียงโผล่ในกล่อง 170px */
-    clip-path: inset(0px 13.66px 8.24px 6.31px);
+    background-position: 0 0;
+    image-rendering: pixelated;
   }
   #rig.sleepy #sleepSprite {
     display: block;
@@ -125,22 +132,10 @@
   }
   /* 4 เฟรม เฟรมละ 1.5s · steps(1, end) = ค้างท่านั้นไว้แล้วตัดไปเฟรมถัดไป */
   @keyframes sleepyAnim {
-    0%  {
-      background-size: 300.06px 300.06px; background-position: 6.31px -8.27px;
-      clip-path: inset(0px 13.66px 8.24px 6.31px);
-    }                                                                                       /* นอนขด */
-    25% {
-      background-size: 288.07px 288.07px; background-position: -129.28px -11.16px;
-      clip-path: inset(0px 11.21px 17.12px 14.75px);
-    }                                                                                       /* หาว */
-    50% {
-      background-size: 303.21px 303.21px; background-position: 6.58px -150.07px;
-      clip-path: inset(1.53px 11.82px 0px 6.58px);
-    }                                                                                       /* กลิ้ง */
-    75% {
-      background-size: 301.85px 301.85px; background-position: -144.46px -152.45px;
-      clip-path: inset(0px 12.61px 0.6px 6.46px);
-    }                                                                                       /* นอนหงาย */
+    0%  { background-position: 0 0; }                                                   /* นอนขด */
+    25% { background-position: calc(var(--pet-size) * -1) 0; }                          /* หาว */
+    50% { background-position: 0 calc(var(--pet-size) * -1); }                          /* กลิ้ง */
+    75% { background-position: calc(var(--pet-size) * -1) calc(var(--pet-size) * -1); } /* นอนหงาย */
   }
 
   /* เคารพ prefers-reduced-motion — หยุดทุกอนิเมชัน น้องส้มยืนนิ่ง (ไม่เดิน) */
@@ -149,10 +144,8 @@
     #bubble { transition: none; }
     #rig.sleepy #sleepSprite {
       animation: none !important;
-      /* เฟรมแรก (นอนขด) — ต้องตรงกับค่า 0% ของ sleepyAnim */
-      background-size: 300.06px 300.06px;
-      background-position: 6.31px -8.27px;
-      clip-path: inset(0px 13.66px 8.24px 6.31px);
+      /* เฟรมแรก (นอนขด) — ค่าเดียวกับ 0% ของ sleepyAnim */
+      background-position: 0 0;
     }
   }
 </style>
