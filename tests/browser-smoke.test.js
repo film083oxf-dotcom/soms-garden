@@ -372,7 +372,9 @@ test('browser smoke: หน้าเว็บจริงใน Chrome headless'
   });
 
   await t.test('ใบเหลือง: lastDone เป็น ISO เต็ม 5 วันก่อน → “ขาด 5 วัน” ไม่ใช่ NaN', async () => {
-    const iso = new Date(Date.now() - 5 * 86400000).toISOString();
+    // วันที่ต้องคิดแบบปฏิทินเวลาเครื่อง (เหมือน dayAgo) — toISOString() ของ "ตอนนี้ลบ 5 วัน"
+    // จะเลื่อนไปวันก่อนหน้าเมื่อรันช่วงเช้ามืดในโซนเวลาเป็นบวก ทำให้ได้ "ขาด 6 วัน"
+    const iso = `${dayAgo(5)}T12:00:00.000Z`;
     writeSite(
       site,
       { status: 'thinking', message: 'คิดงาน', updatedAt: new Date().toISOString() },
