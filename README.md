@@ -1,5 +1,7 @@
 # 🍊 Som's Garden · น้องส้มทำสวน
 
+![น้องส้ม 6 ท่า — thinking, coding, success, error, done, idle (GIF)](docs/demo.gif)
+
 <div align="center">
 
 แมวส้มอ้วนชื่อ **"ส้ม"** ที่มานั่งดูแลสวนหน้าโต๊ะทำงานแทนคุณ
@@ -100,7 +102,7 @@ node set-status.js done "อัปเดตเอกสาร" docs
 
 ## 🧪 เทสต์
 
-ใช้ `node:test` ในตัว Node — ไม่ต้องติดตั้งอะไรเลย (30 เทสต์)
+ใช้ `node:test` ในตัว Node — ไม่ต้องติดตั้งอะไรเลย (69 เทสต์)
 
 ```bash
 node --test "tests/*.test.js"
@@ -111,6 +113,7 @@ node --test "tests/*.test.js"
 | `tests/set-status.test.js` | การเขียนสถานะ, ปลูกต้นไม้ตามชนิดงาน, สตรีคต่อเนื่อง/ขาดช่วง, `garden.json` พัง, ช่วงค่า `--ttl` |
 | `tests/pixel-assets.test.js` | ภาพที่เจนออกมา: 6 ท่าเป็น nearest ×8 จริง, alpha 0/255, 24 สีร่วม · ไอคอนตรงกับ `sprites/idle.png` ทุกเม็ดพิกเซล |
 | `tests/browser-smoke.test.js` | เปิด **หน้าเว็บจริงใน Chrome/Edge headless** แล้วเช็กทีละท่า (ภาพ/ฟองคำพูด/ป้ายสถานะ), `ttlMinutes`, สถานะที่ไม่รู้จัก, การวาดสวน, ใบเหลืองจาก ISO เต็ม, `aria-live`/`aria-pressed`, การขยับ (หายใจ/น้ำหยด/ประกาย/หัวใจ), กดลูบหัว, `prefers-reduced-motion`, และ fallback `.png → .svg` |
+| `tests/freebuff-watch.test.js` | ตัวเฝ้าดู Freebuff: แมปสัญญาณ→สถานะ (คิด/แก้ไฟล์/ล้มเหลว/เทสต์ผ่าน/จบเทิร์นครั้งเดียว/idle), โหมดสำรอง, การจำแนกคำสั่งเทสต์ในหน่วยความจำ, ข้อความ ≤40 ตัวอักษร — ใช้ข้อมูลจำลองล้วน |
 
 เทสต์ทุกตัวสร้างสำเนาเว็บในโฟลเดอร์ชั่วคราวแล้วเสิร์ฟเอง — **ไม่แตะ `status.json` / `garden.json` ของจริง**
 และเก็บกวาดโฟลเดอร์ทิ้งเมื่อจบ
@@ -259,6 +262,44 @@ repo นี้มีไฟล์ [`AGENTS.md`](AGENTS.md) ที่เขีย�
 > 🧠 ถ้าเอเจนต์ของคุณยังไม่ทำตาม ลองถามกลับว่า “ตอนนี้นายทำอะไรอยู่ เขียนลง status.json ให้หน่อย”
 > แล้วมันจะเริ่มใช้คำสั่งเอง
 
+### 🐈‍⬛ ให้ตัวเฝ้าดู Freebuff เขียนสถานะให้เอง (`npm run freebuff`)
+
+ไม่อยากพึ่งให้เอเจนต์เรียกคำสั่งเอง? รันคำสั่งเดียว เปิด desktop pet พร้อมตัวเฝ้าดู:
+
+```bash
+npm run freebuff        # = node adapters/freebuff/watch.js --pet
+```
+
+[`adapters/freebuff/watch.js`](adapters/freebuff/watch.js) (Node ล้วน ไม่มี dependency) อ่านสัญญาณจากแอป
+Freebuff desktop บนเครื่องเดียวกันแบบ **อ่านอย่างเดียว** — เปิด `desktop-v2.db` ใต้
+`~/.config/freebuff-desktop/` ด้วยโหมด readOnly ไม่แก้ไฟล์ Freebuff ใด ๆ ไม่ส่งข้อมูลออกเครือข่าย —
+แล้วเขียน `status.json` ให้เอง:
+
+อ่านสองแหล่ง: **ระหว่างเทิร์น** ดู `threads.harness_state.messageHistory` (สัญญาณสด — ตาราง `messages`
+ถูกบันทึกตอนจบเทิร์น) และ **ตอนจบเทิร์น** ดูตาราง `messages` + `turn_state` (ได้ครบเหตุการณ์แม่นยำ)
+
+| สัญญาณที่อ่านได้ | สถานะ |
+|---|---|
+| กำลังคิด / อ่าน / ค้น (`reasoning`, `read_files`, `web_search` …) | `thinking` |
+| รันคำสั่ง / แก้ไฟล์ (`run_terminal_command`, `str_replace`, `write_file` …) | `coding` |
+| คำสั่งล้มเหลว (`status=failure` / `errorMessage` / `exit ≠ 0`) | `error` |
+| คำสั่งเทสต์เพิ่งผ่าน (จำแนกจากชื่อคำสั่งในหน่วยความจำ) | `success` |
+| จบเทิร์น (`turn_state` running→idle / `last_turn_finished_at` ขยับ) | `done` — ครั้งเดียวต่อเทิร์น ไม่ปลูกต้นไม้ซ้ำ |
+| เงียบเกิน 45 วินาที (ปรับ `--idle=`) | `idle` |
+
+ข้อดีของฝั่งนี้:
+
+- ทุกสถานะแนบ `window: "Freebuff Desktop"` — คลิกน้องส้มแล้วกระโดดไปหน้าต่าง Freebuff ทันที
+- debounce ในตัว: เขียนเฉพาะตอนสถานะเปลี่ยน (ถี่สุด 1.5 วินาที) + คืนค่า `updatedAt` ทุก 2 นาที
+  ให้หน้าเว็บไม่หลับกลางคัน — ไม่ถี่ ไม่ทำให้ Freebuff ช้า (คิวรีเล็ก readOnly รอบละ 1.5 วิ)
+- อ่านเนื้อหาคำสั่งในหน่วยความจำเฉพาะตอนจำแนกว่าเป็นเทสต์หรือไม่ แล้วทิ้งทันที — ไม่พิมพ์ไม่เก็บลงไฟล์ใด ๆ
+- ประวัติการเปลี่ยนสถานะอยู่ที่ `adapters/freebuff/trace.log` (มีเฉพาะ เวลา + สถานะ + เหตุผล + โหมด)
+- หยุด: `echo > adapters/freebuff/watch.stop` หรือ Ctrl+C — ปิด DB + pet ให้เรียบร้อย
+- เปิดฐานข้อมูลไม่ได้ → โหมดสำรอง: มีไฟล์เปลี่ยน→`coding` · เงียบครบเวลา→`done` ครั้งเดียว แล้ว `idle`
+
+> ⚠️ ตอน watcher รันอยู่ อย่าเรียก `set-status.js` เองพร้อมกัน (สองฝ่ายเขียน `status.json` ทับกันได้)
+> รายละเอียดเต็มอยู่ใน [`AGENTS.md`](AGENTS.md)
+
 ## 📲 ติดตั้งเป็นแอปแยกหน้าต่าง
 
 เปิดหน้าเว็บครั้งเดียว แล้วกดปุ่ม **⬇ ติดตั้ง** ที่มุมขวาบน
@@ -297,6 +338,12 @@ icons/*.png                                             ← ไอคอนแ�
 รายละเอียดที่ย่อแล้วหายมีแก้เฉพาะจุดไว้ใน `TOUCHUPS` / `KEEP_DETAILS` ของสคริปต์:
 Zzz ของ `idle` วาดใหม่, น้ำตาสีฟ้าของ `error` ถูกกันไว้ไม่ให้หม่นแล้วต่อหยดให้เห็นทางน้ำตา,
 ปากยิ้มของ `success` ขยายในปากเป็น 3 พิกเซลพร้อมลิ้นสีชมพู — รันซ้ำได้ผลเดิมทุกครั้ง
+
+หลัง alpha ถูกตัดเป็น 0/255 แล้วยังมีขั้น **ล้างเศษ** (`cleanSpecks`): กลุ่มพิกเซลที่แยกจากตัวหลักของแมว
+และมีน้อยกว่า 3 พิกเซล (1–2px) ถูกลบออก ส่วนองค์ประกอบที่ตั้งใจแยกไว้ — Zzz ของ `idle`,
+หยดน้ำของ `coding`, ประกาย/ดาว/ใบไม้ของ `success` — ระบุเป็นกรอบพิกัดใน `CLEANUP_KEEP`
+ที่ต้องหุ้มพอดี ห้ามเปลืองพื้นที่เกิน 4 เท่าของจำนวนพิกเซลที่คุ้ม (มีเทสต์บังคับ)
+ส่วนน้ำตาของ `error` ติดกับตัวอยู่แล้ว ขั้นนี้แตะไม่ได้ จึงไม่ต้องมีกรอบกัน
 
 ```bash
 node tools/pixelate-sprites.js            # แปลงทั้ง 6 ท่าจาก sprites/original
@@ -358,6 +405,8 @@ MIT — เอาไปใช้ แก้ไข แจกจ่าย ได้
 ---
 
 # 🍊 Som's Garden
+
+![Som in six poses — thinking, coding, success, error, done, idle (GIF)](docs/demo.gif)
 
 A chubby orange cat named **"Som"** who tends the garden on your desktop,
 striking a different pose for each state of your AI coding agent.
@@ -463,7 +512,7 @@ finish something again and the garden turns green.
 
 ## 🧪 Tests
 
-Built-in `node:test` — nothing to install (30 tests):
+Built-in `node:test` — nothing to install (69 tests):
 
 ```bash
 node --test "tests/*.test.js"
@@ -474,6 +523,7 @@ node --test "tests/*.test.js"
 | `tests/set-status.test.js` | status writing, plant kinds, streak continuity/gaps, broken `garden.json`, `--ttl` clamping |
 | `tests/pixel-assets.test.js` | generated art: the six poses really are nearest ×8, binary alpha, one 24-colour palette · every icon pixel matches `sprites/idle.png` |
 | `tests/browser-smoke.test.js` | drives the **real page in headless Chrome/Edge**: every pose (sprite, bubble, pill), `ttlMinutes`, unknown status, garden rendering, ISO date yellowing, `aria-live`/`aria-pressed`, motion (breathing, drops, sparkles, hearts), click-to-pet, `prefers-reduced-motion`, `.png → .svg` fallback |
+| `tests/freebuff-watch.test.js` | the Freebuff watcher: signal→status mapping (think/edit/fail/test-pass/one-shot turn-end/idle), fallback mode, in-memory test-command detection, ≤40-char messages — pure synthetic data |
 
 Each test builds a throwaway copy of the site and serves it itself, so the real
 `status.json` / `garden.json` are never touched, and temp folders are cleaned up.
@@ -625,6 +675,48 @@ in Thai, and the status is only reported when the phase changes — not for ever
 > 🧠 If your agent still ignores it, ask “what are you doing right now? write it to status.json”
 > and it will start using the commands.
 
+### 🐈‍⬛ Let the Freebuff watcher drive it (`npm run freebuff`)
+
+One command opens the desktop pet together with the watcher:
+
+```bash
+npm run freebuff        # = node adapters/freebuff/watch.js --pet
+```
+
+[`adapters/freebuff/watch.js`](adapters/freebuff/watch.js) (plain Node, zero dependencies) reads
+signals from the Freebuff desktop app on the same machine **read-only** — it opens `desktop-v2.db`
+under `~/.config/freebuff-desktop/` in readOnly mode, never modifies Freebuff files and never sends
+anything over the network — then writes `status.json` for you:
+
+It reads two sources: **during a turn** it uses `threads.harness_state.messageHistory` (live signals —
+the `messages` table is flushed only when the turn ends), and **at turn end** it uses the `messages`
+table plus `turn_state` (complete and exact).
+
+| Signal it reads | Status |
+|---|---|
+| Thinking / reading / searching (`reasoning`, `read_files`, `web_search` …) | `thinking` |
+| Running commands / editing files (`run_terminal_command`, `str_replace`, `write_file` …) | `coding` |
+| Failed command (`status=failure` / `errorMessage` / `exit ≠ 0`) | `error` |
+| A test command just passed (detected from the command name in memory) | `success` |
+| Turn finished (`turn_state` running→idle / `last_turn_finished_at` grows) | `done` — once per turn, never double-planted |
+| Quiet for 45 s (tune with `--idle=`) | `idle` |
+
+What it does well:
+
+- Every write carries `window: "Freebuff Desktop"` — clicking Som jumps to the Freebuff window.
+- Built-in debounce: writes only when the status changes (at most every 1.5 s) and refreshes
+  `updatedAt` every 2 minutes so the page never falls asleep mid-work — small read-only queries,
+  Freebuff never slows down.
+- Command text is inspected in memory only to decide “was that a test run?”, then discarded —
+  never printed, never stored.
+- Transition history lives in `adapters/freebuff/trace.log` (timestamp + status + reason + mode only).
+- Stop with `echo > adapters/freebuff/watch.stop` or Ctrl+C — closes the DB and the pet cleanly.
+- Database unreachable → fallback mode: file change → `coding`, quiet for the configured time →
+  `done` once, then `idle`.
+
+> ⚠️ While the watcher runs, do not call `set-status.js` yourself (both write `status.json`).
+> Full details are in [`AGENTS.md`](AGENTS.md).
+
 ## 📲 Install it as its own app
 
 Open the page once, then hit **⬇ ติดตั้ง** (Install) in the top-right corner.
@@ -665,6 +757,13 @@ one shared 24-colour palette for all six poses, alpha forced to 0/255, then near
 Details that would otherwise vanish are repaired per pose in the script's `TOUCHUPS` / `KEEP_DETAILS`:
 the `idle` Zzz is redrawn, the blue `error` tears are kept from turning muddy and extended into a drip,
 and the `success` smile gets a 3-pixel mouth with a pink tongue — re-running is deterministic.
+
+After alpha is forced to 0/255 a **speck cleanup** step (`cleanSpecks`) runs: any group that is not
+attached to the cat's body and is smaller than 3 pixels (1–2px) is deleted. The deliberately separate
+elements — the `idle` Zzz, the `coding` water drops, the `success` sparkles and leaf — are listed as
+tight pixel rects in `CLEANUP_KEEP`, and every rect must hug its element, never wasting more than 4×
+the pixels it guards (enforced by a test). The `error` tears touch the body, so cleanup cannot reach
+them and no rect is needed there.
 
 ```bash
 node tools/pixelate-sprites.js            # convert all six poses from sprites/original
