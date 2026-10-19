@@ -11,7 +11,10 @@
  *  3. สร้างพาเลตต์ 24 สีจากทุกท่ารวมกัน (median cut + k-means) แล้ว map ทุกพิกเซล
  *     เข้าพาเลตต์ชุดเดียวกัน
  *  4. alpha เป็น 0 หรือ 255 เท่านั้น (ตัดที่ค่า --alpha, ค่าเริ่มต้น 128)
- *  5. ขยายกลับแบบ nearest-neighbor ×8 → 512×512 แล้วเขียนทับ sprites/<สถานะ>.png
+ *  5. ล้างเศษพิกเซล: กลุ่มที่ไม่ติดกับตัวหลักของแมวและมีน้อยกว่า 3 พิกเซล จะถูกลบ
+ *     โดยเก็บองค์ประกอบที่ตั้งใจแยกไว้ (Zzz ของ idle, หยดน้ำ coding, ประกาย success, น้ำตา error)
+ *     ผ่านกรอบกันใน CLEANUP_KEEP — ดูหัวข้อ "ล้างเศษพิกเซล" ด้านล่าง
+ *  6. ขยายกลับแบบ nearest-neighbor ×8 → 512×512 แล้วเขียนทับ sprites/<สถานะ>.png
  *     (มี fix เฉพาะจุดที่ย่อแล้วอ่านไม่ออก — ดู TOUCHUPS และ KEEP_DETAILS)
  *
  * ใช้: node tools/pixelate-sprites.js [--size=64] [--scale=8] [--colors=24] [--alpha=128]
@@ -474,7 +477,7 @@ function buildPalette(allPixels, wanted) {
 /*
  * ============================ ปรับมือเฉพาะจุด ============================
  *
- * หลังย่อแล้วบางรายละเอียดเล็กลงจนอ่านไม่ออก ที่ 64px มีสามจุดที่ต้องช่วย:
+ * หลังย่อแล้วบางรายละเอียดเล็กลงจนอ่านไม่ออก ที่ 64px มีสี่จุดที่ต้องช่วย:
  *
  *  1. idle — ตัวอักษร Zzz ในต้นฉบับเป็นเส้นบาง ~1px ที่ 64px ทำให้ขาดเป็นจุด ๆ
  *     จึงลบเศษเดิมในกรอบ Zzz แล้ววาด Z ใหม่ด้วยพิกเซล 1px (ตำแหน่งเดียวกับต้นฉบับ)
@@ -482,6 +485,8 @@ function buildPalette(allPixels, wanted) {
  *     จึงกันสีฟ้าไว้ด้วย KEEP.error (ด้านบน) แล้วต่อหยดลงอีก 1 พิกเซลให้เห็นเป็นทางน้ำตา
  *  3. success — ปากที่ยิ้มกว้างมีในปากสีเข้มกับลิ้นสีชมพู แต่ที่ 64px เหลือเป็นก้อนสีตาล
  *     จึงขยายในปากเป็น 3 พิกเซลแล้ววางลิ้นสีชมพู 1 พิกเซล
+ *  4. success — ดอกไม้สองดอกมุมขวาล่างเหลือเป็นก้อนสีพาสเทลไม่อ่านเป็นดอกไม้
+ *     จึงเติมขอบสีเข้ม 1px รอบกลีบ (outlineFlowers + FLOWERS) ด้วยสี #6e3929 ที่มีอยู่ในพาเลตต์เดิม
  *
  * ทุกจุดทำ "ก่อน" quantize โดยเขียนสีตรง ๆ แล้วปล่อยให้ map เข้าพาเลตต์เอง
  * สีที่เขียนจึงยังอยู่ใน 24 สีร่วมกันเสมอ
@@ -490,6 +495,44 @@ const INK = [59, 36, 24];        // หมึกเข้ม (Zzz) — quantize 
 const TEAR = [141, 208, 235];    // ฟ้าอ่อนของน้ำตา
 const MOUTH = [144, 86, 60];     // ในปาก
 const TONGUE = [249, 157, 150];  // ลิ้น
+const PETAL_EDGE = [110, 57, 41]; // ขอบดอกไม้ (สีเดียวกับ #6e3929 ที่มีอยู่ในพาเลตต์ — ไม่เพิ่มสีใหม่)
+
+/* กรอบพิกัดดอกไม้สองดอกมุมขวาล่างของ `success` (ยึดจากกลุ่มพิกเซลจริงในภาพ) */
+const FLOWERS = [
+  { x0: 48, y0: 51, x1: 52, y1: 58 },   // ดอกไม้สีฟ้า + ใบ (กลุ่ม 22px)
+  { x0: 44, y0: 53, x1: 47, y1: 58 },   // ดอกไม้สีชมพู + ใบ (กลุ่ม 14px)
+];
+
+/**
+ * เติมขอบสีเข้ม 1px รอบกลีบดอกไม้: ทุกช่องว่างที่ติด (เชื่อม 8 ทิศ) กับพิกเซลทึบของดอก
+ * ระบายด้วย PETAL_EDGE ปล่อยช่องที่ทึบอยู่แล้วไว้ จึงไม่ทับเนื้อดอกและไม่แตะตัวแมว
+ */
+function outlineFlowers(small, size, put) {
+  for (const f of FLOWERS) {
+    const solid = [];
+    for (let y = f.y0; y <= f.y1; y++) {
+      for (let x = f.x0; x <= f.x1; x++) {
+        if (small[(y * size + x) * 4 + 3] >= 128) solid.push([x, y]);
+      }
+    }
+    const ring = new Set();
+    for (const [x, y] of solid) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (!dx && !dy) continue;
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
+          ring.add(ny * size + nx);
+        }
+      }
+    }
+    for (const p of ring) {
+      if (small[p * 4 + 3] >= 128) continue;    // ไม่ทับส่วนที่ทึบอยู่แล้ว
+      put(p % size, (p / size) | 0, PETAL_EDGE);
+    }
+  }
+}
 
 const IDLE_ZZZ = {
   clear: { x0: 44, y0: 7, x1: 58, y1: 16 },
@@ -526,13 +569,128 @@ const TOUCHUPS = {
   },
 
   // ปากยิ้มกว้าง: ในปาก 3 พิกเซล + ลิ้นสีชมพูตรงกลาง
+  // + ขอบสีเข้ม 1px รอบกลีบดอกไม้มุมขวาล่าง (ให้อ่านเป็นดอกไม้ ไม่ใช่ก้อนสีลอย)
   success(small, size, put) {
     put(34, 26, MOUTH);
     put(35, 26, MOUTH);
     put(36, 26, MOUTH);
     put(35, 27, TONGUE);
+    outlineFlowers(small, size, put);
   },
 };
+
+/*
+ * ============================ ล้างเศษพิกเซล ============================
+ *
+ * หลัง alpha ถูกตัดเป็น 0/255 แล้ว ภาพอาจเหลือเศษพิกเซลกระจุกเล็กที่ลอยโดด ๆ ไม่แตะตัวแมว
+ * (รอยเปื้อนจากพื้นหลังโปร่งใสหรือจาก area filter) จึงล้างกลุ่มที่
+ *   - แยกจากตัวหลัก (ไม่ใช่คอมโพเนนต์ที่ใหญ่ที่สุด) และ
+ *   - มีพิกเซลน้อยกว่า 3 ตัว (มีเพียงกลุ่มเดียว = จุดโดด ๆ)
+ * *  องค์ประกอบที่ตั้งใจวาดแยกต้องไม่โดนลบ — ระบุเป็นกรอบกันตามสถานะใน CLEANUP_KEEP
+ *  (ทุกกรอบหุ้มองค์ประกอบพอดี ไม่เปลืองพื้นที่เกิน 4 เท่า):
+ *   idle     — อักขระ Zzz ที่วาดใหม่ (แต่ละตัวเป็น 7–12 พิกเซลที่แยกกัน)
+ *   coding   — หยดน้ำจากบัวรดน้ำ 2 หยด
+ *   success  — ประกาย/ดาวรอบหัว (ดาวบางดวงเหลือเพียง 1–2 พิกเซล)
+ *              (ส่วนดอกไม้/ใบไม้มุมขวาล่างมีขอบต่อให้ติดกันเป็นกลุ่มใหญ่ ไม่ใช่เศษแล้ว)
+ *   error    — ไม่ต้องมีกรอบ เพราะน้ำตาใต้ตาติดกับตัวแมวอยู่แล้ว (ขั้นล้างเศษแตะเฉพาะกลุ่มลอย)
+ *
+ * รันซ้ำได้ผลเดิม เพราะเป็นการลบอย่างเดียว ไม่มีการเพิ่มพิกเซล
+ */
+const SPECK_MIN = 3;   // กลุ่มเล็กกว่า 3 พิกเซล = เศษที่ต้องลบ
+
+/* ทุกกรอบต้อง "หุ้มพอดี" องค์ประกอบที่คุ้ม — ห้ามเปลืองพื้นที่เกิน 4 เท่าของจำนวนพิกเซลลอย
+ * ที่อยู่ในนั้น (มีเทสต์บังคับ: tests/pixel-assets.test.js) เพราะกรอบที่กว้างเกินจะคุ้มเศษ
+ * ที่ยังไม่เกิดขึ้นจริงไปด้วย */
+const CLEANUP_KEEP = {
+  // Zzz ของ idle: 1 กรอบต่อ 1 ตัวอักษร ยึดจาก IDLE_ZZZ.glyphs จุดเดียวกับที่วาดไว้
+  idle: IDLE_ZZZ.glyphs.map((g) => ({
+    x0: g.x,
+    y0: g.y,
+    x1: g.x + Math.max(...g.rows.map((row) => row.length)) - 1,
+    y1: g.y + g.rows.length - 1,
+  })),
+  coding: [
+    { x0: 50, y0: 45, x1: 52, y1: 46 },    // หยดน้ำจากบัวรดน้ำ (หยดละ 1px · 2 หยด)
+  ],
+  success: [
+    { x0: 14, y0: 16, x1: 15, y1: 16 },    // ประกายสีฟ้าเหนือหัวซ้าย
+    { x0: 12, y0: 20, x1: 12, y1: 21 },    // ประกายสีน้ำตาลข้างหัวซ้าย
+    { x0: 35, y0: 9, x1: 35, y1: 9 },      // ดาวชมพูเหนือกลางหัว
+    { x0: 51, y0: 17, x1: 51, y1: 17 },    // ประกายข้างหูขวา
+    { x0: 14, y0: 35, x1: 14, y1: 35 },    // ดาวข้างลำตัวซ้าย
+    // (ใบไม้เดี่ยวมุมขวาล่างไม่ต้องคุ้มแล้ว — outlineFlowers ต่อขอบให้มันติดกับดอกไม้เป็นกลุ่มเดียว)
+  ],
+  // error: ไม่ต้องมีกรอบ — น้ำตาสีฟ้าติดกับตัวแมวอยู่แล้ว cleanSpecks แตะไม่ได้
+  //        (มีเทสต์เช็กว่าสีฟ้าของน้ำตาใน error ยังอยู่ครบแทน)
+};
+
+/** ตารางทึบ 64×64 จาก small (alpha === 255) */
+function opaqueGrid(small, size) {
+  const opaque = new Uint8Array(size * size);
+  for (let i = 0; i < size * size; i++) if (small[i * 4 + 3] === 255) opaque[i] = 1;
+  return opaque;
+}
+
+/** แตกพิกเซลทึบเป็นกลุ่ม connected component (เชื่อม 8 ทิศ) เรียงจากใหญ่ไปเล็ก */
+function componentsOf(opaque, size) {
+  const seen = new Uint8Array(size * size);
+  const stack = new Int32Array(size * size);
+  const groups = [];
+  for (let start = 0; start < size * size; start++) {
+    if (seen[start] || !opaque[start]) continue;
+    let top = 0;
+    stack[top++] = start;
+    seen[start] = 1;
+    const cells = [];
+    while (top > 0) {
+      const p = stack[--top];
+      cells.push(p);
+      const x = p % size;
+      const y = (p / size) | 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (!dx && !dy) continue;
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue;
+          const q = ny * size + nx;
+          if (!seen[q] && opaque[q]) {
+            seen[q] = 1;
+            stack[top++] = q;
+          }
+        }
+      }
+    }
+    groups.push(cells);
+  }
+  groups.sort((a, b) => b.length - a.length);
+  return groups;
+}
+
+/**
+ * ล้างกลุ่มเล็กกว่า SPECK_MIN ที่ไม่ใช่ตัวหลัก และไม่ได้อยู่ในกรอบกัน (keepRects)
+ * คืนจำนวนพิกเซลที่ลบ — แก้ `small` ที่ตัวเดิม (alpha กลายเป็น 0 ทันที)
+ */
+function cleanSpecks(small, size, keepRects) {
+  const groups = componentsOf(opaqueGrid(small, size), size);
+  let removed = 0;
+  for (let i = 1; i < groups.length; i++) {          // 0 = ตัวหลักของภาพ
+    const cells = groups[i];
+    if (cells.length >= SPECK_MIN) continue;
+    const kept = keepRects && keepRects.some((r) => cells.some((p) => {
+      const x = p % size;
+      const y = (p / size) | 0;
+      return x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1;
+    }));
+    if (kept) continue;
+    for (const p of cells) {
+      const o = p * 4;
+      small[o] = small[o + 1] = small[o + 2] = small[o + 3] = 0;
+      removed++;
+    }
+  }
+  return removed;
+}
 
 function applyTouchup(status, small, size) {
   const touchup = TOUCHUPS[status];
@@ -610,6 +768,10 @@ function main() {
       opaque++;
     }
 
+    // ล้างเศษหลัง alpha ถูกตัดเป็น 0/255 แล้ว — เอาเฉพาะกลุ่มเล็กกว่า 3 พิกเซล
+    // ที่ไม่แตะตัวหลัก และไม่ได้อยู่ในกรอบกันของ CLEANUP_KEEP (ดูหัวข้อ "ล้างเศษพิกเซล")
+    const removed = cleanSpecks(small, opts.size, CLEANUP_KEEP[s.status]);
+
     const size = opts.size * opts.scale;
     const out = Buffer.alloc(size * size * 4);
     for (let y = 0; y < size; y++) {
@@ -631,7 +793,10 @@ function main() {
     for (let i = 0; i < small.length; i += 4) {
       if (small[i + 3] === 255) used.add((small[i] << 16) | (small[i + 1] << 8) | small[i + 2]);
     }
-    console.log(`✅ ${s.status}.png → ${size}×${size} (จาก 64×64 · ${opaque} พิกเซลทึบ · ใช้ ${used.size} สี)`);
+    console.log(
+      `✅ ${s.status}.png → ${size}×${size} (จาก 64×64 · ${opaque - removed} พิกเซลทึบ · ใช้ ${used.size} สี)` +
+      (removed ? ` · 🧹 ล้างเศษ ${removed} พิกเซล` : ''),
+    );
   }
 }
 
@@ -640,4 +805,5 @@ if (require.main === module) main();
 module.exports = {
   decodePng, encodePng, areaDownsample, collectPixels, buildPalette, medianCut, refinePalette,
   mergeAndFill, nearestColor, nearestIndex, STATUSES,
+  componentsOf, opaqueGrid, cleanSpecks, SPECK_MIN, CLEANUP_KEEP,
 };

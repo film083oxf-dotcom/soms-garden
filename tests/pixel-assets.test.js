@@ -14,7 +14,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const { decodePng, STATUSES } = require(path.join(ROOT, 'tools', 'pixelate-sprites.js'));
+const { decodePng, STATUSES, componentsOf, cleanSpecks, SPECK_MIN, CLEANUP_KEEP } =
+  require(path.join(ROOT, 'tools', 'pixelate-sprites.js'));
 const { readUnit, UNIT, BG } = require(path.join(ROOT, 'tools', 'make-icons.js'));
 
 const UNIT_SCALE = 8;                    // 512 = 64×8
@@ -23,6 +24,25 @@ const CREAM = (BG[0] << 16) | (BG[1] << 8) | BG[2];
 function colorAt(img, x, y) {
   const i = (y * img.width + x) * 4;
   return { color: (img.data[i] << 16) | (img.data[i + 1] << 8) | img.data[i + 2], alpha: img.data[i + 3] };
+}
+
+const hex = (c) => '#' + c.toString(16).padStart(6, '0');
+
+/** ตาราง 64×64 ของท่าหนึ่ง: ตารางทึบ (1/0) + แมปสี hex รายพิกเซล */
+function gridOf(status) {
+  const img = decodePng(path.join(ROOT, 'sprites', status + '.png'));
+  const unit = img.width / UNIT;
+  const opaque = new Uint8Array(UNIT * UNIT);
+  const colors = new Map();
+  for (let y = 0; y < UNIT; y++) {
+    for (let x = 0; x < UNIT; x++) {
+      const i = ((y * unit) * img.width + x * unit) * 4;
+      if (img.data[i + 3] !== 255) continue;
+      opaque[y * UNIT + x] = 1;
+      colors.set(y * UNIT + x, hex((img.data[i] << 16) | (img.data[i + 1] << 8) | img.data[i + 2]));
+    }
+  }
+  return { opaque, colors };
 }
 
 function palette() {
@@ -54,6 +74,96 @@ test('sprites/*.png ทั้ง 6 ท่าเป็นพิกเซลอา
         assert.equal(first.alpha, 255, status + ' alpha ต้องเป็น 0/255');
         assert.ok(pal.has(first.color), status + ' สีต้องอยู่ในพาเลตต์ร่วม');
       }
+    }
+  }
+});
+
+test('cleanSpecks: ลบเฉพาะกลุ่มเล็กกว่า 3 ที่แยกจากตัวหลัก และเคารพกรอบกัน', () => {
+  const size = 16;
+  const make = () => {
+    const buf = Buffer.alloc(size * size * 4);
+    const paint = (x, y) => {
+      const o = (y * size + x) * 4;
+      buf[o] = 10; buf[o + 1] = 10; buf[o + 2] = 10; buf[o + 3] = 255;
+    };
+    for (let y = 2; y < 10; y++) for (let x = 2; x < 10; x++) paint(x, y);   // ตัวหลัก 8×8
+    paint(12, 3); paint(12, 4);                                               // กลุ่ม 2px (ต้องลบ)
+    paint(12, 12); paint(13, 12); paint(13, 13);                              // กลุ่ม 3px (ต้องเก็บ)
+    return buf;
+  };
+
+  const noKeep = make();
+  assert.equal(cleanSpecks(noKeep, size, null), 2, 'ต้องลบเฉพาะกลุ่ม 2px');
+  assert.equal(noKeep[(3 * size + 12) * 4 + 3], 0, 'พิกเซลเศสถูกลบ');
+  assert.equal(noKeep[(4 * size + 12) * 4 + 3], 0, 'พิกเซลเศสถูกลบ');
+  assert.equal(noKeep[(12 * size + 12) * 4 + 3], 255, 'กลุ่ม 3px ต้องอยู่');
+  assert.equal(noKeep[(5 * size + 5) * 4 + 3], 255, 'ตัวหลักต้องอยู่');
+  assert.equal(cleanSpecks(noKeep, size, null), 0, 'รันซ้ำรอบสองไม่เหลืออะไรให้ลบ (idempotent)');
+
+  const kept = make();
+  assert.equal(cleanSpecks(kept, size, [{ x0: 12, y0: 3, x1: 12, y1: 4 }]), 0, 'อยู่ในกรอบกัน → ไม่ลบ');
+  assert.equal(kept[(3 * size + 12) * 4 + 3], 255, 'พิกเซลในกรอบกันยังอยู่');
+  assert.equal(kept[(4 * size + 12) * 4 + 3], 255, 'พิกเซลในกรอบกันยังอยู่');
+});
+
+test('ไม่มีเศษหลุดรอด: เศษที่แยกจากตัวหลักต้องอยู่ในกรอบกัน องค์ประกอบหลักยังอยู่ครบ', () => {
+  const INK = '#4c291f';      // อักขระ Zzz ของ idle
+  const BLUE = '#8dd0eb';     // หยดน้ำ coding / น้ำตา error
+  const GREEN = '#8db74f';    // ใบไม้/ดอกไม้ด้านล่างของ success
+
+  const counts = {};   // สีในกรอบกัน + สีทั้งภาพ ของแต่ละท่า
+  for (const status of STATUSES) {
+    const { opaque, colors } = gridOf(status);
+    const groups = componentsOf(opaque, UNIT);
+    const keep = CLEANUP_KEEP[status] || [];
+    const inRect = (p) => keep.some((r) => {
+      const x = p % UNIT;
+      const y = (p / UNIT) | 0;
+      return x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1;
+    });
+
+    for (const cells of groups.slice(1)) {                 // 0 = ตัวหลักของท่า
+      if (cells.length >= SPECK_MIN) continue;
+      assert.ok(cells.some(inRect),
+        `${status}: เศษ ${cells.length}px ที่ (${cells[0] % UNIT},${(cells[0] / UNIT) | 0}) ไม่ได้อยู่ในกรอบกันของ CLEANUP_KEEP`);
+    }
+    for (const rect of keep) {
+      const hits = [...colors.keys()].filter((p) => {
+        const x = p % UNIT;
+        const y = (p / UNIT) | 0;
+        return x >= rect.x0 && x <= rect.x1 && y >= rect.y0 && y <= rect.y1;
+      });
+      assert.ok(hits.length > 0, `${status}: กรอบกัน (${rect.x0},${rect.y0})-(${rect.x1},${rect.y1}) ไม่มีพิกเซลเลย`);
+    }
+
+    counts[status] = { keepColors: new Set(), allColors: new Set(colors.values()) };
+    for (const p of colors.keys()) if (inRect(p)) counts[status].keepColors.add(colors.get(p));
+  }
+
+  assert.ok(counts.idle.keepColors.has(INK), 'Zzz ของ idle ต้องยังอยู่');
+  assert.ok(counts.coding.keepColors.has(BLUE), 'หยดน้ำของ coding ต้องยังอยู่');
+  // น้ำตา error ติดกับตัวแมว (ไม่มีกรอบกัน) → เช็กการมีอยู่จากสีทั้งภาพ
+  assert.ok(counts.error.allColors.has(BLUE), 'น้ำตาของ error ต้องยังอยู่');
+  assert.ok(counts.success.allColors.has(GREEN), 'ใบไม้/ดอกไม้ของ success ต้องยังอยู่');
+});
+
+test('กรอบกันไม่เปลืองที่: พื้นที่ห้ามเกิน 4 เท่าขององค์ประกอบลอยที่มันคุ้มจริง', () => {
+  const WASTE_LIMIT = 4;
+  for (const status of STATUSES) {
+    const { opaque } = gridOf(status);
+    const floating = new Set(componentsOf(opaque, UNIT).slice(1).flat());   // ทุกกลุ่มที่แยกจากตัวหลัก
+    for (const rect of CLEANUP_KEEP[status] || []) {
+      const area = (rect.x1 - rect.x0 + 1) * (rect.y1 - rect.y0 + 1);
+      const targets = [...floating].filter((p) => {
+        const x = p % UNIT;
+        const y = (p / UNIT) | 0;
+        return x >= rect.x0 && x <= rect.x1 && y >= rect.y0 && y <= rect.y1;
+      });
+      assert.ok(targets.length > 0,
+        `${status}: กรอบ (${rect.x0},${rect.y0})-(${rect.x1},${rect.y1}) ไม่ได้คุ้้องค์ประกอบลอยเลย`);
+      assert.ok(area <= WASTE_LIMIT * targets.length,
+        `${status}: กรอบ (${rect.x0},${rect.y0})-(${rect.x1},${rect.y1}) ${area} เซลล์ คุ้ม ${targets.length}px ` +
+        `= ${(area / targets.length).toFixed(1)}x เกิน ${WASTE_LIMIT}x — ต้องหดให้พอดี`);
     }
   }
 });
