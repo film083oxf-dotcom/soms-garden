@@ -22,3 +22,10 @@ Thumbs.db
 # ใส่ / นำหน้าเพื่อ ignore เฉพาะไฟล์ที่ราก repo ไม่ให้โดน examples/status.json
 /status.json
 /garden.json
+
+# MCP config เฉพาะเครื่อง (พาธ absolute ของเครื่องนี้) + ไฟล์ชั่วคราวจาก tools/artcraft
+/.agents/mcp.json
+/.artcraft-out/
+
+# stdout ที่ redirect ออกมา (เช่น adapters/freebuff/watch.out) — ไม่ใช่ของที่ต้องขึ้น repo
+*.out
