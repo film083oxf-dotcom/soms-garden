@@ -1,6 +1,10 @@
 # 🍊 Som's Garden · น้องส้มทำสวน
 
-![น้องส้ม 6 ท่า — thinking, coding, success, error, done, idle (GIF)](docs/demo.gif)
+<p align="center">
+  <a href="https://github.com/film083oxf-dotcom/soms-garden/actions/workflows/test.yml"><img src="https://github.com/film083oxf-dotcom/soms-garden/actions/workflows/test.yml/badge.svg" alt="tests"></a>
+</p>
+
+<p align="center"><img src="docs/demo.gif" width="384" alt="น้องส้ม 6 ท่า — thinking, coding, success, error, done, idle (GIF)"></p>
 
 <div align="center">
 
@@ -437,7 +441,11 @@ MIT — เอาไปใช้ แก้ไข แจกจ่าย ได้
 
 # 🍊 Som's Garden
 
-![Som in six poses — thinking, coding, success, error, done, idle (GIF)](docs/demo.gif)
+<p align="center">
+  <a href="https://github.com/film083oxf-dotcom/soms-garden/actions/workflows/test.yml"><img src="https://github.com/film083oxf-dotcom/soms-garden/actions/workflows/test.yml/badge.svg" alt="tests"></a>
+</p>
+
+<p align="center"><img src="docs/demo.gif" width="384" alt="Som in six poses — thinking, coding, success, error, done, idle (GIF)"></p>
 
 A chubby orange cat named **"Som"** who tends the garden on your desktop,
 striking a different pose for each state of your AI coding agent.
