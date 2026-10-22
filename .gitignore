@@ -27,5 +27,9 @@ Thumbs.db
 /.agents/mcp.json
 /.artcraft-out/
 
-# stdout ที่ redirect ออกมา (เช่น adapters/freebuff/watch.out) — ไม่ใช่ของที่ต้องขึ้น repo
+# ของชั่วคราว/สถานะรันไทม์ของ Freebuff watcher (pid, trace, marker, ไฟล์สั่งหยุด, stdout)
+/adapters/freebuff/watch.pid
+/adapters/freebuff/watch.stop
+/adapters/freebuff/trace.log*
+/adapters/freebuff/trace.marker
 *.out
