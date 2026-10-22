@@ -245,15 +245,19 @@ repo นี้มีไฟล์ [`AGENTS.md`](AGENTS.md) ที่เขีย�
 
 | เครื่องมือ | อ่าน `AGENTS.md` เองไหม | ต้องทำอะไรใน repo นี้ |
 |---|---|---|
-| **Codex** (OpenAI) | ✅ อ่านเอง — *“Codex reads AGENTS.md files before doing any work”* ไล่จากราก repo ลงมาถึงโฟลเดอร์ที่กำลังทำงาน | ไม่ต้องทำอะไร |
-| **Cursor** | ✅ อ่านเอง — รองรับ `AGENTS.md` ทั้งราก repo และโฟลเดอร์ย่อย | ไม่ต้องทำอะไร |
-| **GitHub Copilot** (cloud agent / VS Code / Copilot CLI) | ✅ อ่านเอง — รองรับ `AGENTS.md` ในฐานะ agent instructions | ไม่ต้องทำอะไร |
-| **Claude Code** | ⚠️ อ่าน**ก็ต่อเมื่อไม่มี `CLAUDE.md`** ในโฟลเดอร์ปัจจุบันหรือชั้นเหนือขึ้นไป (ตั้งแต่ v2.1.277) — ถ้ามี `CLAUDE.md` การ fallback ไปอ่าน `AGENTS.md` จะถูกยกเลิก | repo นี้มี [`CLAUDE.md`](CLAUDE.md) ที่สั่ง import `@AGENTS.md` ให้แล้ว จึงใช้ได้ทุกเวอร์ชัน |
-| **Gemini CLI** | ❌ ไม่อ่าน — ค่าเริ่มต้นอ่านเฉพาะไฟล์ชื่อ `GEMINI.md` | repo นี้มี [`GEMINI.md`](GEMINI.md) ที่สั่ง import `@./AGENTS.md` ให้แล้ว (ทางเลือก: ตั้ง `context.fileName` ใน `.gemini/settings.json`) |
+| **Codex** (OpenAI) | ✅ อ่านเอง — ไล่จาก `$CODEX_HOME` → รากโปรเจกต์ → โฟลเดอร์ที่ทำงานอยู่ (ในโฟลเดอร์เดียวกัน `AGENTS.override.md` มาก่อน `AGENTS.md`) | ไม่ต้องทำอะไร |
+| **Cursor** | ✅ อ่านเอง — `AGENTS.md` ใช้แทน `.cursor/rules` ได้ ทั้งราก repo และโฟลเดอร์ย่อย | ไม่ต้องทำอะไร |
+| **GitHub Copilot** | ✅ เฉพาะบางพื้นผิว — cloud agent, Copilot CLI และ Copilot Chat ใน VS Code อ่าน `AGENTS.md`; Copilot Chat บน github.com ไม่ได้ | ไม่ต้องทำอะไร (พื้นผิวที่ไม่รองรับ ใช้กติกาจาก prompt เอง) |
+| **Claude Code** | ⚠️ ตั้งแต่ v2.1.277 อ่าน `AGENTS.md` เอง **แต่ค่าเริ่มต้นจะไม่โหลดถ้ามี `CLAUDE.md` / `.claude/CLAUDE.md` / `CLAUDE.local.md` ในโฟลเดอร์นั้นหรือชั้นเหนือขึ้นไป** (ไฟล์ระดับผู้ใช้/องค์กรไม่บล็อก) และตั้งค่าให้โหลดทั้งสองแบบได้ | repo นี้มี [`CLAUDE.md`](CLAUDE.md) ที่สั่ง `@AGENTS.md` ให้แล้ว จึงได้กติกาเดียวกันทุกเวอร์ชัน |
+| **Gemini CLI** | ❌ ไม่ได้อ่านโดยค่าเริ่มต้น — โหลดเฉพาะไฟล์ชื่อ `GEMINI.md` (จะเพิ่ม `AGENTS.md` ก็ได้ด้วย `context.fileName` ใน `.gemini/settings.json`) | repo นี้มี [`GEMINI.md`](GEMINI.md) ที่สั่ง `@./AGENTS.md` ให้แล้ว |
 | เครื่องมือที่ไม่รู้จักไฟล์นี้ | ❌ ไม่ | เริ่มบทสนทนาด้วย: **“อ่าน `AGENTS.md` แล้วทำตาม”** |
 | เอเจนต์ที่รันใน sandbox อ่านไฟล์นอกโปรเจกต์ไม่ได้ | — | วาง `AGENTS.md` ไว้ที่ราก repo เดียวกัน (ไฟล์อยู่ในโปรเจกต์แล้ว) |
 
 > 📖 เอกสารทางการที่ใช้ตรวจสอบ (ต.ค. 2026): [Codex · AGENTS.md](https://developers.openai.com/codex/agent-configuration/agents-md) · [Cursor · Rules](https://cursor.com/docs/rules) · [Claude Code · Memory](https://code.claude.com/docs/en/memory) · [Gemini CLI · GEMINI.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md) · [GitHub Copilot · Custom instructions support](https://docs.github.com/en/copilot/reference/custom-instructions-support)
+
+> 🧭 **ทำไมมีทั้ง `CLAUDE.md` และ `GEMINI.md`?** `AGENTS.md` เป็นแหล่งความจริงเดียวของกติกาในโปรเจกต์นี้
+> สองไฟล์นั้นเป็นแค่ “ตัวชี้” ที่ `import` เนื้อหามา ไม่มีกติกาของตัวเอง — จึงไม่มีทางที่กติกาจะแตกเป็นสองชุด
+> เวลาจะแก้กติกา แก้ที่ [`AGENTS.md`](AGENTS.md) ที่เดียว
 
 กติกาหลักในไฟล์นั้น: `thinking` ตอนวางแผน → `coding` ตอนลงมือแก้ → `success` / `error` ตามผลเทสต์
 → `done <fix|feature|docs>` ตอนจบงาน **ครั้งเดียว** ข้อความสั้น เป็นภาษาไทย
@@ -277,6 +281,7 @@ Freebuff desktop บนเครื่องเดียวกันแบบ **
 
 อ่านสองแหล่ง: **ระหว่างเทิร์น** ดู `threads.harness_state.messageHistory` (สัญญาณสด — ตาราง `messages`
 ถูกบันทึกตอนจบเทิร์น) และ **ตอนจบเทิร์น** ดูตาราง `messages` + `turn_state` (ได้ครบเหตุการณ์แม่นยำ)
+(อ่านอะไรบ้างแบบละเอียดอยู่ในหัวข้อ [สิ่งที่ตัวเฝ้าดูอ่าน](#-สิ่งที่ตัวเฝ้าดูอ่าน) ด้านล่าง)
 
 | สัญญาณที่อ่านได้ | สถานะ |
 |---|---|
@@ -296,6 +301,32 @@ Freebuff desktop บนเครื่องเดียวกันแบบ **
 - ประวัติการเปลี่ยนสถานะอยู่ที่ `adapters/freebuff/trace.log` (มีเฉพาะ เวลา + สถานะ + เหตุผล + โหมด)
 - หยุด: `echo > adapters/freebuff/watch.stop` หรือ Ctrl+C — ปิด DB + pet ให้เรียบร้อย
 - เปิดฐานข้อมูลไม่ได้ → โหมดสำรอง: มีไฟล์เปลี่ยน→`coding` · เงียบครบเวลา→`done` ครั้งเดียว แล้ว `idle`
+- **รูปแบบข้อมูลของ Freebuff เปลี่ยน** (ตาราง/คอลัมน์ที่ใช้หายไป) → หยุดตัวเองทันทีพร้อมบอกว่าอะไรขาด
+  ไม่เดาสถานะต่อ — ถ้ายังอยากใช้โหมดสำรองให้สั่ง `--fallback` เอง
+
+#### 🔍 สิ่งที่ตัวเฝ้าดูอ่าน
+
+**ตัวเฝ้าดูต้องเปิดเอง** — `npm start` (desktop pet) และ `npx serve .` ไม่ได้เรียกมัน
+มีแต่ `npm run freebuff` / `node adapters/freebuff/watch.js` ที่เปิดมัน และปิดได้ด้วย Ctrl+C หรือ `watch.stop`
+
+มันแตะไฟล์เดียวของ Freebuff: `desktop-v2.db` (SQLite) ใต้ `~/.config/freebuff-desktop/projects/<project>/`
+เปิดในโหมด `readOnly` — ไม่มีคำสั่งเขียนใด ๆ ไปที่ไฟล์นั้น:
+
+| อ่านจาก | ฟิลด์ | เอาไปใช้ทำอะไร |
+|---|---|---|
+| ตาราง `threads` | `status`, `turn_state`, `last_prompt_at`, `last_turn_finished_at`, `last_turn_outcome`, `turn_alive_at` | รู้ว่ากำลังทำ/จบเทิร์น/เงียบนานแค่ไหน |
+| `threads.harness_state` | `sessionState.mainAgentState.messageHistory[*]` → `role`, `content[].type`, `toolName`, `exitCode`, `errorMessage`, `sentAt` | สัญญาณสดระหว่างเทิร์น (ตาราง `messages` ยังไม่ถูกบันทึก) |
+| ตาราง `messages` | `role`, `ts`, `parts_json` → `kind`, `toolName`, `status`, `exitCode`, `input.command` | เหตุการณ์ของเทิร์นที่จบแล้ว |
+| โหมดสำรอง | เวลาแก้ไข (mtime) ของ `desktop-v2.db`, `desktop-v2.db-wal`, `state.json` | รู้แค่ว่า “ไฟล์ขยับ” = กำลังทำงาน |
+
+**ไม่เก็บ ไม่พิมพ์ ไม่ส่ง:**
+
+- **ไม่เก็บเนื้อหาสนทนา** — ข้อความผู้ใช้ ข้อความเอเจนต์ โค้ด และผลลัพธ์คำสั่ง ไม่ถูกคัดลอกลงไฟล์ใด ๆ
+- `input.command` ถูกอ่านในหน่วยความจำเฉพาะตอนตัดสินว่า “นี่คือคำสั่งเทสต์ไหม” แล้วทิ้งทันที (ตัวแปรมีแค่ `true`/`false`)
+- `trace.log` เก็บแค่ เวลา + สถานะ + เหตุผลแบบ enum (เช่น `tool:str_replace`, `test-pass`) + โหมด — ไม่มีพาธ ชื่อไฟล์ หรือคำสั่ง
+- **ไม่ส่งข้อมูลออกเครือข่าย** — ไฟล์นี้ไม่มี `fetch` / `http` / `net` ไม่มี telemetry และไม่เรียกบริการภายนอก
+- **ไม่แก้ไฟล์ของ Freebuff** — เปิด DB แบบ `readOnly` ไม่มีคำสั่งเขียน/ลบ/ย้าย และไม่แตะ WAL
+- ตรวจ schema ด้วย `PRAGMA table_info` ก่อนอ่านทุกครั้ง — ถ้าคอลัมน์ที่ใช้หายไปจะหยุดพร้อมบอกชื่อ ไม่เดาต่อ
 
 > ⚠️ ตอน watcher รันอยู่ อย่าเรียก `set-status.js` เองพร้อมกัน (สองฝ่ายเขียน `status.json` ทับกันได้)
 > รายละเอียดเต็มอยู่ใน [`AGENTS.md`](AGENTS.md)
@@ -658,15 +689,19 @@ calling `set-status.js` on its own as the work phase changes — no per-tool hoo
 
 | Tool | Reads `AGENTS.md` by itself? | What to do in this repo |
 |---|---|---|
-| **Codex** (OpenAI) | ✅ Yes — *“Codex reads AGENTS.md files before doing any work”*, walking from the repo root down to the working directory | Nothing |
-| **Cursor** | ✅ Yes — supports `AGENTS.md` at the project root and in subdirectories | Nothing |
-| **GitHub Copilot** (cloud agent / VS Code / Copilot CLI) | ✅ Yes — `AGENTS.md` is supported as agent instructions | Nothing |
-| **Claude Code** | ⚠️ Only **when there is no `CLAUDE.md`** in the working directory or above (v2.1.277+) — a `CLAUDE.md` suppresses the `AGENTS.md` fallback | This repo ships [`CLAUDE.md`](CLAUDE.md) with an `@AGENTS.md` import, so it works on every version |
-| **Gemini CLI** | ❌ No — by default it only loads files named `GEMINI.md` | This repo ships [`GEMINI.md`](GEMINI.md) importing `@./AGENTS.md` (alternative: set `context.fileName` in `.gemini/settings.json`) |
+| **Codex** (OpenAI) | ✅ Yes — it walks `$CODEX_HOME`, then the project root down to the working directory (in the same folder `AGENTS.override.md` wins over `AGENTS.md`) | Nothing |
+| **Cursor** | ✅ Yes — `AGENTS.md` works as an alternative to `.cursor/rules`, at the project root and in subdirectories | Nothing |
+| **GitHub Copilot** | ✅ On some surfaces only — the cloud agent, Copilot CLI and Copilot Chat in VS Code read `AGENTS.md`; Copilot Chat on github.com does not | Nothing (unsupported surfaces rely on the prompt) |
+| **Claude Code** | ⚠️ Since v2.1.277 it reads `AGENTS.md` itself, **but by default it will not load it when a `CLAUDE.md` / `.claude/CLAUDE.md` / `CLAUDE.local.md` exists in the working directory or above** (user-level and managed files do not suppress it); it can also be configured to load both | This repo ships [`CLAUDE.md`](CLAUDE.md) with an `@AGENTS.md` import, so it works on every version |
+| **Gemini CLI** | ❌ Not by default — it only loads files named `GEMINI.md` (you can add `AGENTS.md` via `context.fileName` in `.gemini/settings.json`) | This repo ships [`GEMINI.md`](GEMINI.md) importing `@./AGENTS.md` |
 | Tools that ignore this file | ❌ No | Start with: **“read AGENTS.md and follow it”** |
 | Agents sandboxed away from the project | — | `AGENTS.md` lives at the repo root, so it travels with the checkout |
 
 > 📖 Official docs checked (Oct 2026): [Codex · AGENTS.md](https://developers.openai.com/codex/agent-configuration/agents-md) · [Cursor · Rules](https://cursor.com/docs/rules) · [Claude Code · Memory](https://code.claude.com/docs/en/memory) · [Gemini CLI · GEMINI.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md) · [GitHub Copilot · Custom instructions support](https://docs.github.com/en/copilot/reference/custom-instructions-support)
+
+> 🧭 **Why both `CLAUDE.md` and `GEMINI.md`?** `AGENTS.md` is the single source of truth for the rules
+> in this repo. The other two are just pointers that `import` it and carry no rules of their own, so the
+> rules can never drift into two copies — edit [`AGENTS.md`](AGENTS.md) and nothing else.
 
 The rules are: `thinking` while planning → `coding` while editing → `success` / `error` for the
 build result → `done <fix|feature|docs>` once, when the whole task is done. Messages stay short and
@@ -690,7 +725,8 @@ anything over the network — then writes `status.json` for you:
 
 It reads two sources: **during a turn** it uses `threads.harness_state.messageHistory` (live signals —
 the `messages` table is flushed only when the turn ends), and **at turn end** it uses the `messages`
-table plus `turn_state` (complete and exact).
+table plus `turn_state` (complete and exact). Field-by-field detail is in
+[What the watcher reads](#-what-the-watcher-reads) below.
 
 | Signal it reads | Status |
 |---|---|
@@ -713,6 +749,38 @@ What it does well:
 - Stop with `echo > adapters/freebuff/watch.stop` or Ctrl+C — closes the DB and the pet cleanly.
 - Database unreachable → fallback mode: file change → `coding`, quiet for the configured time →
   `done` once, then `idle`.
+- **Freebuff changes its data layout** (a table or column it uses disappears) → it stops itself and
+  names what is missing instead of guessing. Use `--fallback` if you still want change-only mode.
+
+#### 🔍 What the watcher reads
+
+**You start it yourself** — `npm start` (desktop pet) and `npx serve .` never launch it. Only
+`npm run freebuff` / `node adapters/freebuff/watch.js` does, and Ctrl+C or `watch.stop` ends it.
+
+It touches exactly one Freebuff file: `desktop-v2.db` (SQLite) under
+`~/.config/freebuff-desktop/projects/<project>/`, opened `readOnly`:
+
+| Read from | Fields | Used for |
+|---|---|---|
+| `threads` table | `status`, `turn_state`, `last_prompt_at`, `last_turn_finished_at`, `last_turn_outcome`, `turn_alive_at` | is a turn running / just finished / how long it has been quiet |
+| `threads.harness_state` | `sessionState.mainAgentState.messageHistory[*]` → `role`, `content[].type`, `toolName`, `exitCode`, `errorMessage`, `sentAt` | live signals mid-turn (the `messages` table is written only at turn end) |
+| `messages` table | `role`, `ts`, `parts_json` → `kind`, `toolName`, `status`, `exitCode`, `input.command` | events of a finished turn |
+| Fallback mode | mtimes of `desktop-v2.db`, `desktop-v2.db-wal`, `state.json` | only “something moved” = still working |
+
+**Never stored, printed, or sent:**
+
+- **No conversation content** — user messages, agent text, code and command output are never copied
+  into any file.
+- `input.command` is read in memory only to decide “is this a test run?”, then dropped (the only
+  thing kept is `true`/`false`).
+- `trace.log` holds only timestamp + status + enum reason (e.g. `tool:str_replace`, `test-pass`) +
+  mode — no paths, filenames or commands.
+- **Nothing goes over the network** — the file has no `fetch` / `http` / `net`, no telemetry, no
+  third-party calls.
+- **No Freebuff file is modified** — the DB is opened `readOnly`; there are no writes, deletes, moves,
+  and the WAL is never touched.
+- The schema is checked with `PRAGMA table_info` before every read; if a field it needs disappears it
+  stops and names it rather than guessing.
 
 > ⚠️ While the watcher runs, do not call `set-status.js` yourself (both write `status.json`).
 > Full details are in [`AGENTS.md`](AGENTS.md).
