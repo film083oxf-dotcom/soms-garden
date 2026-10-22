@@ -3,6 +3,41 @@
 repo นี้มีมาสคอตชื่อ **น้องส้ม** (`index.html`) ที่อ่าน `status.json` ทุก 1 วินาที
 แล้วเปลี่ยนท่าทางตามสถานะ — หน้าที่ของคุณคือ **เล่าสถานะการทำงานให้มันรู้** ด้วยคำสั่งด้านล่าง
 
+## ทางลัด: ตัวเฝ้าดู Freebuff อัตโนมัติ (`npm run freebuff`)
+
+ไม่อยากเรียก `set-status.js` เองทุกครั้ง? รันคำสั่งเดียว เปิด desktop pet พร้อมตัวเฝ้าดู:
+
+```bash
+npm run freebuff        # = node adapters/freebuff/watch.js --pet
+```
+
+ตัวเฝ้า (`adapters/freebuff/watch.js` · Node ล้วน ไม่มี dependency) อ่านสัญญาณจาก Freebuff desktop
+แบบ **อ่านอย่างเดียว** (ฐานข้อมูล `desktop-v2.db` ใต้ `~/.config/freebuff-desktop/` — ไม่แตะไฟล์ Freebuff
+ไม่ส่งข้อมูลออกเครือข่าย) แล้วเขียน `status.json` ให้เองตามตาราง (กลางเทิร์นอ่านสัญญาณสดจาก
+`threads.harness_state.messageHistory` · ตอนจบเทิร์นอ่านตาราง `messages` + `turn_state`):
+
+| สัญญาณจาก Freebuff | สถานะที่ได้ |
+|---|---|
+| กำลังคิด / อ่าน / ค้น (reasoning, read_files, web_search …) | `thinking` |
+| รันคำสั่ง / แก้ไฟล์ (run_terminal_command, str_replace, write_file …) | `coding` |
+| คำสั่งล้มเหลว (status=failure / errorMessage หรือ exit ≠ 0) | `error` |
+| รันคำสั่งเทสต์แล้วผ่าน | `success` |
+| จบเทิร์น (turn_state running→idle / last_turn_finished_at ขยับ) | `done` — **ครั้งเดียวต่อเทิร์น** |
+| เงียบเกิน 45 วินาที (ปรับ `--idle=`) | `idle` |
+
+ข้อควรรู้:
+
+- **watcher ไม่ได้ติดมาอัตโนมัติ** — `npm start` (desktop pet) และ `npx serve .` ไม่เปิดมัน ต้องสั่ง `npm run freebuff` เอง
+- **ระหว่าง watcher รันอยู่ อย่าเรียก `set-status.js` เอง** — สองฝ่ายเขียน status.json ทับกันได้
+  (ถ้าไม่ได้เปิด watcher ก็ใช้ตารางด้านบนเรียกเองตามเดิม)
+- ทุกสถานะที่ watcher เขียนแนบ `window: "Freebuff Desktop"` อยู่แล้ว — คลิกน้องส้มแล้วกระโดดไปหน้าต่าง Freebuff เลย
+- สั่งหยุด: `echo > adapters/freebuff/watch.stop` (หรือ Ctrl+C) — ปิด DB + desktop pet ให้เรียบร้อย
+- ดูประวัติการเปลี่ยนสถานะ: `adapters/freebuff/trace.log` (มีเฉพาะ เวลา + สถานะ + เหตุผล + โหมด — ไม่มีเนื้อหาสนทนา/คำสั่ง/โค้ด)
+- เปิดฐานข้อมูลไม่ได้ → ทำงานต่อในโหมดสำรอง: ดูแค่ว่ามีไฟล์เปลี่ยนแปลง (มี→`coding` · เงียบครบเวลา→`done` ครั้งเดียว แล้ว `idle`)
+- **โครงสร้างฐานข้อมูลของ Freebuff เปลี่ยน** (ตาราง/คอลัมน์ที่ใช้หายไป) → watcher **หยุดตัวเอง** พร้อมบอกว่าอะไรขาด
+  (exit 2, ไม่เดาสถานะต่อ) — ถ้าจำเป็นให้ใช้โหมดสำรองต่อ สั่ง `--fallback` เอง
+- อ่านเนื้อหาคำสั่งในหน่วยความจำเฉพาะตอนจำแนกว่าเป็นเทสต์หรือไม่ แล้วทิ้งทันที — ไม่พิมพ์ไม่เก็บลงไฟล์ใด ๆ
+
 ## เรียกเมื่อไหร่
 
 เรียก **เฉพาะตอนเปลี่ยนช่วงงาน** (ไม่ใช่ทุกคำสั่งที่รัน) โดยประมาณนี้
@@ -66,6 +101,47 @@ node set-status.js done "ซ่อมสตรีคและเพิ่มเ�
 
 This repo ships a mascot, **Som** (`index.html`), which polls `status.json` every second and
 changes pose accordingly. Report your work phase with the commands below.
+
+## Shortcut: the automatic Freebuff watcher (`npm run freebuff`)
+
+Skip the manual calls — one command opens the desktop pet together with the watcher:
+
+```bash
+npm run freebuff        # = node adapters/freebuff/watch.js --pet
+```
+
+The watcher (`adapters/freebuff/watch.js` · plain Node, zero dependencies) reads signals from the
+Freebuff desktop app **read-only** (its `desktop-v2.db` under `~/.config/freebuff-desktop/` — it
+ever modifies Freebuff files and never sends anything over the network) and writes `status.json`
+for you (mid-turn it reads live signals from `threads.harness_state.messageHistory`; at turn end it
+reads the `messages` table plus `turn_state`):
+
+| Freebuff signal | Status |
+|---|---|
+| Thinking / reading / searching (reasoning, read_files, web_search …) | `thinking` |
+| Running commands / editing files (run_terminal_command, str_replace, write_file …) | `coding` |
+| Failed command (status=failure / errorMessage or exit ≠ 0) | `error` |
+| A test command just passed | `success` |
+| Turn finished (turn_state running→idle / last_turn_finished_at moves) | `done` — **once per turn** |
+| Quiet for 45 s (tune with `--idle=`) | `idle` |
+
+Good to know:
+
+- **The watcher is never started for you** — `npm start` (desktop pet) and `npx serve .` do not launch
+  it; only `npm run freebuff` does.
+- **While the watcher runs, do NOT call `set-status.js` yourself** — both would write `status.json`.
+  (Manual calls from the table below stay valid whenever the watcher is off.)
+- Every watcher write carries `window: "Freebuff Desktop"`, so clicking Som jumps to the Freebuff window.
+- Stop it: `echo > adapters/freebuff/watch.stop` (or Ctrl+C) — closes the DB and the pet cleanly.
+- Transition history: `adapters/freebuff/trace.log` (timestamp + status + reason + mode only —
+  never conversation text, commands, or code).
+- If the database cannot be opened it degrades to a fallback mode: any file change → `coding`,
+  quiet for the configured time → `done` once, then `idle`.
+- **If Freebuff's data layout changes** (a table or column it reads disappears) the watcher **stops
+  itself** and names what is missing (exit 2) instead of guessing; pass `--fallback` to keep running
+  in change-only mode.
+- Command text is inspected in memory only to decide “was that a test run?”, then discarded —
+  it is never printed or stored.
 
 Call them **only when the phase changes**, never for every command you run:
 
