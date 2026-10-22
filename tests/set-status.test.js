@@ -14,7 +14,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { setStatus, normalizeTTL, localDate, KIND_OF } = require('../set-status.js');
+const { setStatus, normalizeTTL, localDate, localDateBefore, KIND_OF } = require('../set-status.js');
 
 /* ---------- ที่เขียนไฟล์ชั่วคราวต่อ 1 เทสต์ ---------- */
 const tempDirs = [];
@@ -158,4 +158,53 @@ test('normalizeTTL จำกัดช่วง 1–1440 นาที', () => {
 test('localDate คืนวันที่แบบเวลาเครื่อง (YYYY-MM-DD)', () => {
   assert.match(localDate(new Date(2026, 0, 5)), /^2026-01-05$/);
   assert.match(localDate(), /^\d{4}-\d{2}-\d{2}$/);
+});
+
+/* ---------- สตรีคต้องเดินตามปฏิทินเวลาเครื่อง (ไม่ใช่ UTC / ไม่ใช่ "07:00 เวลาไทย") ---------- */
+
+test('localDateBefore: วันก่อนหน้าแบบปฏิทิน (ข้ามเดือน/ปีได้)', () => {
+  assert.equal(localDateBefore(new Date(2026, 10, 1, 0, 30)), '2026-10-31');
+  assert.equal(localDateBefore(new Date(2026, 0, 1, 23, 59)), '2025-12-31');
+  assert.equal(localDateBefore(new Date(2026, 2, 1, 0, 30), 2), '2026-02-27');   // มี.ค. 1 → 27 ก.พ.
+});
+
+test('สตรีค: 07:00 เวลาไทยไม่ขึ้นวันใหม่ (ยังเป็นวันเดิม ไม่บวกเพิ่ม)', () => {
+  const box = sandbox();
+  const opts = { statusFile: box.statusFile, gardenFile: box.gardenFile };
+
+  setStatus('done', 'เมื่อวาน', 'fix', { ...opts, now: new Date(2026, 9, 21, 20, 0) });
+  assert.equal(box.read(box.gardenFile).streak, 1);
+
+  // 06:59 กับ 07:01 ของวันเดียวกัน — ต้องเป็นวันเดียวกันทั้งคู่
+  setStatus('done', 'เช้ามืด', 'fix', { ...opts, now: new Date(2026, 9, 22, 6, 59) });
+  setStatus('done', 'หลังเจ็ดโมง', 'fix', { ...opts, now: new Date(2026, 9, 22, 7, 1) });
+
+  const g = box.read(box.gardenFile);
+  assert.equal(g.streak, 2, 'เมื่อวาน→วันนี้ +1 ครั้งเดียว (07:00 ไม่ใช่เส้นแบ่งวัน)');
+  assert.equal(g.lastDone, '2026-10-22');
+  assert.deepEqual(g.plants.map((p) => p.date), ['2026-10-21', '2026-10-22', '2026-10-22']);
+});
+
+test('สตรีค: วันใหม่เริ่มตอนเที่ยงคืนตามเวลาเครื่อง', () => {
+  const box = sandbox();
+  const opts = { statusFile: box.statusFile, gardenFile: box.gardenFile };
+
+  setStatus('done', 'ก่อนเที่ยงคืน', 'docs', { ...opts, now: new Date(2026, 9, 22, 23, 59) });
+  setStatus('done', 'หลังเที่ยงคืน', 'docs', { ...opts, now: new Date(2026, 9, 23, 0, 1) });
+
+  const g = box.read(box.gardenFile);
+  assert.equal(g.streak, 2, 'ข้ามเที่ยงคืน = วันใหม่ → ต่อสตรีค');
+  assert.equal(g.lastDone, '2026-10-23');
+  assert.deepEqual(g.plants.map((p) => p.date), ['2026-10-22', '2026-10-23']);
+});
+
+test('สตรีค: done ตอน 00:30 เวลาเครื่อง ต้องลงวันที่ของวันนั้น (ไม่ใช่เมื่อวานแบบ UTC)', () => {
+  const box = sandbox();
+  const plant = setStatus('done', 'ดึกมาก', 'feature', {
+    statusFile: box.statusFile,
+    gardenFile: box.gardenFile,
+    now: new Date(2026, 9, 22, 0, 30),
+  });
+  assert.equal(plant.date, '2026-10-22');
+  assert.equal(box.read(box.gardenFile).lastDone, '2026-10-22');
 });

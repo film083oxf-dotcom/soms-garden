@@ -69,6 +69,11 @@ function localDate(d = new Date()) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// วันก่อนหน้าแบบปฏิทินเวลาเครื่อง (ไม่ใช่ "ลบ 24 ชั่วโมง" ที่อาจเพี้ยนข้าม DST/ข้ามวัน)
+function localDateBefore(d, days = 1) {
+  return localDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() - days));
+}
+
 /**
  * อัปเดตสถานะน้องส้ม
  * @param {string} status  สถานะจาก STATUSES
@@ -94,6 +99,7 @@ function normalizeTTL(value) {
  *                         { ttlMinutes } = เงียบกี่นาทีถือว่าหลับ
  *                         { window } = ชื่อหน้าต่างเอเจนต์ (ให้ desktop pet กระโดดไปหาเมื่อคลิก)
  *                         { statusFile, gardenFile } = เปลี่ยนที่เขียนไฟล์ (ใช้ในเทสต์)
+ *                         { now } = เวลาที่ใช้คิดวัน/สตรีค (ใช้ในเทสต์; ค่าเริ่มต้น = เวลาจริง)
  * @returns {object|null} ต้นไม้ที่ถูกเพิ่ม (ถ้ามี)
  */
 function setStatus(status, message = '', taskType, opts = {}) {
@@ -105,7 +111,8 @@ function setStatus(status, message = '', taskType, opts = {}) {
   const gardenFile = opts.gardenFile || GARDEN_FILE;
 
   // 1) เขียนสถานะลง status.json (หน้าเว็บจะอ่านทุก 1 วินาที)
-  const now = new Date();
+  //    วันที่/สตรีคคิดจากปฏิทินเวลาเครื่องเสมอ — ไม่ใช่ UTC (จึงไม่เปลี่ยนวันตอน 07:00 เวลาไทย)
+  const now = opts.now instanceof Date ? opts.now : new Date();
   const record = {
     status,
     message: String(message).trim(),
@@ -130,7 +137,7 @@ function setStatus(status, message = '', taskType, opts = {}) {
   if (!Array.isArray(garden.plants)) garden.plants = [];
 
   const today = localDate(now);
-  const yesterday = localDate(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+  const yesterday = localDateBefore(now, 1);
 
   garden.plants.push({ type, kind: KIND_OF[type], date: today, addedAt: now.toISOString() });
 
@@ -149,7 +156,7 @@ function setStatus(status, message = '', taskType, opts = {}) {
 }
 
 module.exports = {
-  setStatus, normalizeTTL, STATUSES, KIND_OF, KIND_TH, localDate, readJSON, writeJSON,
+  setStatus, normalizeTTL, STATUSES, KIND_OF, KIND_TH, localDate, localDateBefore, readJSON, writeJSON,
 };
 
 /**
