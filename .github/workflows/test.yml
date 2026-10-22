@@ -1,0 +1,31 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: node ${{ matrix.node }} · TZ=${{ matrix.tz }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22']
+        tz: ['UTC', 'Asia/Bangkok']
+    env:
+      TZ: ${{ matrix.tz }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # ไม่มี dependency ให้ติดตั้ง (node:test + node:sqlite ล้วน) และไม่ใช้ PhotoCraft/FilmCraft
+      - name: Repo tests (status writer, watcher, pixel art, demo GIF, browser smoke)
+        run: npm test
+
+      # desktop tests import only desktop/lib + tools/ — ไม่ต้องโหลด Electron
+      - name: Desktop pet tests
+        run: npm --prefix desktop test
